@@ -43,19 +43,6 @@
             <version>v1.2.0</version>
         </dependency>
 
-        <!--IPFS cluster java api - used latest commit hash-->
-        <dependency>
-            <groupId>com.github.IpfsBattery</groupId>
-            <artifactId>java-ipfs-cluster-api</artifactId>
-            <version>e33c5c19f3a99c7ea4fee12ee49c174395a68914</version>
-        </dependency>
-
-        <!--<dependency>-->
-            <!--<groupId>io.ipfs.cluster</groupId>-->
-            <!--<artifactId>api</artifactId>-->
-            <!--<version>v0.0.1</version>-->
-        <!--</dependency>-->
-
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-parsers</artifactId>

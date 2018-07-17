@@ -19,8 +19,8 @@ public class IPFSFileStorageService implements FileStorageService {
     @Autowired
     private IPFS ipfs;
 
-//    IPFSCluster ipfsCluster = new IPFSCluster("127.0.0.1", 9094);
-//    IPFSCluster cluster = new IPFSCluster("127.0.0.1", 9094);
+    @Autowired
+    private IPFSCluster cluster;
 
     @Override
     public String save(MultipartFile file) {
@@ -30,6 +30,7 @@ public class IPFSFileStorageService implements FileStorageService {
             NamedStreamable.ByteArrayWrapper streamable = new NamedStreamable.ByteArrayWrapper(file.getBytes());
             MerkleNode node = ipfs.add(streamable).get(0);
             hash = node.hash.toString();
+            cluster.pins.add(hash);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -40,16 +41,16 @@ public class IPFSFileStorageService implements FileStorageService {
     public Resource loadFileAsResource(String hash) {
         byte[] fileContents = null;
         Multihash filePointer = Multihash.fromBase58(hash);
+        Resource resource = null;
 
         try {
             fileContents = ipfs.cat(filePointer);
+            resource = new ByteArrayResource(fileContents);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Resource resource = new ByteArrayResource(fileContents);
-
         return resource;
     }
-
 
 }
