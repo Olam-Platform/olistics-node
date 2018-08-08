@@ -3,17 +3,14 @@ package com.olam.node.sdk;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.ResourceUtils;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 
 @RunWith(SpringRunner.class)
-public class IPFSClusterTestIntegration {
+public class IPFSClusterIntegrationTest {
 
 
     private IPFSCluster cluster;
