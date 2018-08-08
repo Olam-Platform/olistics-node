@@ -1,0 +1,18 @@
+
+@startuml
+actor user
+box "Olam Node" #LightBlue
+participant "Olam backend" as on
+database "Ethereum Private" as ep
+end box
+
+user->on : subscribe event request(event, signature, callback url)
+on->ep : verify permission request
+ep-->on : verify permission response
+on->on : subscribe to event
+on-->user : subscribe event response
+ep->on: event
+on->user : callback url with event data
+
+
+@enduml
