@@ -1,6 +1,6 @@
 package com.olam.node.web;
 
-import com.olam.node.service.FileStorageService;
+import com.olam.node.service.infrastructure.DataStorageService;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.metadata.Metadata;
@@ -19,24 +19,39 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @RestController
-@RequestMapping("file")
-public class FileController {
+@RequestMapping("shipment")
+public class ShipmentController {
 
-    private static final Logger logger = LoggerFactory.getLogger(FileController.class);
+    private static final Logger logger = LoggerFactory.getLogger(ShipmentController.class);
 
     @Autowired
-    private FileStorageService fileStorageService;
+    private DataStorageService dataStorageService;
     private Detector detector = new DefaultDetector();
 
+
+//    @PostMapping
+//    public String createShipment(@RequestParam("recipients") String recipients, @RequestParam("signedTransaction") String trx){
+//        //check permission to create shipment
+//        //check valid recipients
+//        //relay transaction to blockchain
+//        //get transaction hash and send back to user
+//
+//    }
+
     @PostMapping
-    public String uploadNewFile(@RequestParam("file") MultipartFile file) {
-        String fileHash = fileStorageService.save(file);
+    public String submitNewData(@RequestParam("data") MultipartFile data) {
+        String fileHash = null;
+        try {
+            fileHash = dataStorageService.save(data.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return fileHash;
     }
 
     @GetMapping(value = "/{hash}")
     public ResponseEntity<Resource> downloadFile(@PathVariable("hash") String fileHash, HttpServletRequest request) {
-        Resource resource = fileStorageService.loadFileAsResource(fileHash);
+        Resource resource = dataStorageService.loadDataAsResource(fileHash);
         String contentType = null;
         try {
             contentType = this.detectDocumentType(resource.getInputStream());

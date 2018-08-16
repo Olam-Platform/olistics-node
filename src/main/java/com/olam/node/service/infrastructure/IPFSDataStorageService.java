@@ -1,4 +1,4 @@
-package com.olam.node.service;
+package com.olam.node.service.infrastructure;
 
 import com.olam.node.sdk.IPFSCluster;
 import io.ipfs.api.IPFS;
@@ -9,12 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
 @Service
-public class IPFSFileStorageService implements FileStorageService {
+public class IPFSDataStorageService implements DataStorageService {
 
     @Autowired
     private IPFS ipfs;
@@ -23,13 +22,24 @@ public class IPFSFileStorageService implements FileStorageService {
     private IPFSCluster cluster;
 
     @Override
-    public String save(MultipartFile file) {
+    public String getdataIdentifier(byte[] data) {
+        return save(data, true);
+    }
+
+    @Override
+    public String save(byte[] file) {
+        return save(file,false);
+    }
+
+
+
+    private String save(byte[] data, boolean hashOnly) {
 
         String hash = null;
         try {
-            NamedStreamable.ByteArrayWrapper streamable = new NamedStreamable.ByteArrayWrapper(file.getBytes());
-            MerkleNode node = ipfs.add(streamable).get(0);
-            hash = node.hash.toString();
+            NamedStreamable.ByteArrayWrapper streamable = new NamedStreamable.ByteArrayWrapper(data);
+            MerkleNode node = ipfs.add(streamable,false,hashOnly).get(0);
+
             cluster.pins.add(hash);
         } catch (IOException e) {
             e.printStackTrace();
@@ -38,14 +48,14 @@ public class IPFSFileStorageService implements FileStorageService {
     }
 
 
-    public Resource loadFileAsResource(String hash) {
-        byte[] fileContents = null;
-        Multihash filePointer = Multihash.fromBase58(hash);
+    public Resource loadDataAsResource(String hash) {
+        byte[] dataContents = null;
+        Multihash dataPointer = Multihash.fromBase58(hash);
         Resource resource = null;
 
         try {
-            fileContents = ipfs.cat(filePointer);
-            resource = new ByteArrayResource(fileContents);
+            dataContents = ipfs.cat(dataPointer);
+            resource = new ByteArrayResource(dataContents);
 
         } catch (IOException e) {
             e.printStackTrace();

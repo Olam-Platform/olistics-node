@@ -1,4 +1,4 @@
-package com.olam.node.service;
+package com.olam.node.service.infrastructure;
 
 import com.olam.node.sdk.Transport;
 import org.web3j.crypto.CipherException;
@@ -8,8 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public interface IEthereumNodeService {
-    boolean Build();
+public interface EthereumNodeService {
 
     // deploy using online signature
     //Transport DeployTransportContract(String accountAddress, String password, String shipperAddress, String receiverAddress, long msecSinceEpoc) throws Exception;
@@ -28,4 +27,6 @@ public interface IEthereumNodeService {
     void            SendEther(Credentials credentials, String recipient, float sum) throws Exception;
 
     float           GetEtherBalance(String aacountAddress) throws IOException;
+
+    String relaySignedTransaction(String signedTransaction);
 }
