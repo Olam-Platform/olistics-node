@@ -1,6 +1,8 @@
 package com.olam.node.service;
 
 import com.olam.node.sdk.Transport;
+import com.olam.node.service.infrastructure.EthereumNodeService;
+import com.olam.node.service.infrastructure.EthereumNodeServiceImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -40,9 +42,7 @@ public class TestBasicContractFunctionality {
         try {
             properties.load(new FileReader(ResourceUtils.getFile("classpath:application.properties")));
 
-            nodeService = new EthereumNodeService(properties.getProperty("rpcurl.rinkeby"));
-
-            nodeService.Build();
+            nodeService = new EthereumNodeServiceImpl(properties.getProperty("rpcurl.rinkeby"));
 
             LoadCredentials();
 
