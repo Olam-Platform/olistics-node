@@ -1,19 +1,19 @@
 pragma solidity ^0.4.24;
 
 contract Transport {
-    struct Document {
-        string 	    url;
-        address     submitter;
-        uint        timeStamp;
-        address[]   recipients;
 
-        // a symmetric key for each each recipient encrypted with the recipient's public address. use to decrypt document
-        mapping (address => bytes32)   keys;
+    struct Document {
+        string url;
+        address submitter;
+        uint timeStamp;
+        address[] recipients;
+        // an encrypted symmetric key for each each recipient encrypted with the recipient's public address. use to decrypt document
+        mapping(address => bytes32) keys;
     }
 
     // constants
-    string constant MANAGER_ROLE  = "manager";
-    string constant SHIPPER_ROLE  = "shipper";
+    string constant MANAGER_ROLE = "manager";
+    string constant SHIPPER_ROLE = "shipper";
     string constant RECEIVER_ROLE = "receiver";
 
     uint startTime;                             // start time of this contract
@@ -23,6 +23,7 @@ contract Transport {
     mapping(string => bool)         documentsExist;                 // helper mapping
     mapping(string => address)      roles;                          // all transport roles
     address[]                       addresses;
+
 
     mapping(address => string[])    directory;                      //
 
@@ -36,9 +37,12 @@ contract Transport {
 
 
     constructor(address shipperAddress, address receiverAddress, uint timeStamp) public {
-        roles[MANAGER_ROLE]     = msg.sender;           // the creator of this Transport
-        roles[SHIPPER_ROLE]     = shipperAddress;       // the origin of the goods
-        roles[RECEIVER_ROLE]    = receiverAddress;      // the final destination of the goods
+        roles[MANAGER_ROLE] = msg.sender;
+        // the creator of this Transport
+        roles[SHIPPER_ROLE] = shipperAddress;
+        // the origin of the goods
+        roles[RECEIVER_ROLE] = receiverAddress;
+        // the final destination of the goods
 
         addresses.push(roles[MANAGER_ROLE]);
         addresses.push(roles[SHIPPER_ROLE]);
@@ -52,17 +56,17 @@ contract Transport {
         currentState = "none";
 
         // notify all roles that the transport has started
-        for(uint i = 0 ; i < addresses.length ; i++) {
+        for (uint i = 0; i < addresses.length; i++) {
             emit TransportStarted(timeStamp, addresses[i]);
         }
     }
 
     // submit a document
     function submitDocument(string name, string url, uint timeStamp, address[] recipients, bytes32[] keys) public returns (uint) {
-        require (isKnownRole(msg.sender), "role is not part of this transport");
+        require(isKnownRole(msg.sender), "role is not part of this transport");
 
         //mapping(address => string) storage keysMapping;
-        documents[name].push(Document({url:url, submitter:msg.sender, timeStamp:timeStamp, recipients: new address[](0)}));
+        documents[name].push(Document({url : url, submitter : msg.sender, timeStamp : timeStamp, recipients : new address[](0)}));
 
         uint version = documents[name].length - 1;
         documentsExist[name] = true;
@@ -83,7 +87,7 @@ contract Transport {
 
     // request a document locator
     function requestDocument(string name) view public returns (string, uint, address, uint, bytes32) {
-        require (isKnownRole(msg.sender), "role is not part of this transport");
+        require(isKnownRole(msg.sender), "role is not part of this transport");
         require(documentsExist[name], "unknown document requested");
 
         // return the latest version
@@ -93,12 +97,12 @@ contract Transport {
 
     // request a versioned document locator
     function requestDocument(string name, uint version) view public returns (string, uint, address, uint, bytes32) {
-        require (isKnownRole(msg.sender), "role is not part of this transport");
+        require(isKnownRole(msg.sender), "role is not part of this transport");
         require(documentsExist[name], "unknown document requested");
         require(version < documents[name].length, "illegal version number requested");
 
         address submitter = documents[name][version].submitter;
-        uint    timeStamp = documents[name][version].timeStamp;
+        uint timeStamp = documents[name][version].timeStamp;
 
         //emit DocumentRequested(name, version, submitter);
 
@@ -107,7 +111,7 @@ contract Transport {
 
     // does not validate state transitions
     function setState(string newState, string cause) public {
-        require (isKnownRole(msg.sender), "role is not part of this transport");
+        require(isKnownRole(msg.sender), "role is not part of this transport");
 
         for (uint i = 0; i < addresses.length; i++) {
             emit StateChanged(currentState, newState, cause, addresses[i]);
@@ -117,7 +121,7 @@ contract Transport {
     }
 
     function GetState() public view returns (string) {
-        require (isKnownRole(msg.sender), "role is not part of this transport");
+        require(isKnownRole(msg.sender), "role is not part of this transport");
 
         return currentState;
     }
@@ -131,7 +135,7 @@ contract Transport {
     }
 
     function getRole(address roleAddress) view public returns (string) {
-        require (isKnownRole(msg.sender), "role is not part of this transport");
+        require(isKnownRole(msg.sender), "role is not part of this transport");
 
         return directory[roleAddress][0];
     }
@@ -143,7 +147,7 @@ contract Transport {
     function isKnownRole(address roleAddress) view private returns (bool) {
         bool result = false;
 
-        for(uint i = 0 ; i < directory[roleAddress].length ; i++) {
+        for (uint i = 0; i < directory[roleAddress].length; i++) {
             if (bytes(directory[roleAddress][i]).length > 0) {
                 result = true;
                 break;
