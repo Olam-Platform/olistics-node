@@ -1,13 +1,12 @@
 pragma solidity ^0.4.24;
 
-contract Transport {
 
+contract Transport {
     struct Document {
         string url;
         address submitter;
         uint timeStamp;
         address[] recipients;
-        // an encrypted symmetric key for each each recipient encrypted with the recipient's public address. use to decrypt document
         mapping(address => bytes32) keys;
     }
 
@@ -35,7 +34,6 @@ contract Transport {
 
     event Warn(string message);
 
-
     constructor(address shipperAddress, address receiverAddress, uint timeStamp) public {
         roles[MANAGER_ROLE] = msg.sender;
         // the creator of this Transport
@@ -62,11 +60,15 @@ contract Transport {
     }
 
     // submit a document
-    function submitDocument(string name, string url, uint timeStamp, address[] recipients, bytes32[] keys) public returns (uint) {
+    function submitDocument(
+        string name, string url, uint timeStamp, address[] recipients, bytes32[] keys) public returns (uint
+    ) {
         require(isKnownRole(msg.sender), "role is not part of this transport");
 
         //mapping(address => string) storage keysMapping;
-        documents[name].push(Document({url : url, submitter : msg.sender, timeStamp : timeStamp, recipients : new address[](0)}));
+        documents[name].push(
+            Document({url : url, submitter : msg.sender, timeStamp : timeStamp, recipients : new address[](0)})
+        );
 
         uint version = documents[name].length - 1;
         documentsExist[name] = true;
@@ -86,7 +88,7 @@ contract Transport {
     }
 
     // request a document locator
-    function requestDocument(string name) view public returns (string, uint, address, uint, bytes32) {
+    function requestDocument(string name) view public returns (string, uint, address, uint/*, bytes32*/) {
         require(isKnownRole(msg.sender), "role is not part of this transport");
         require(documentsExist[name], "unknown document requested");
 
@@ -96,7 +98,9 @@ contract Transport {
     }
 
     // request a versioned document locator
-    function requestDocument(string name, uint version) view public returns (string, uint, address, uint, bytes32) {
+    function requestDocument(
+        string name, uint version) view public returns (string, uint, address, uint/*, bytes32*/
+    ) {
         require(isKnownRole(msg.sender), "role is not part of this transport");
         require(documentsExist[name], "unknown document requested");
         require(version < documents[name].length, "illegal version number requested");
@@ -106,7 +110,9 @@ contract Transport {
 
         //emit DocumentRequested(name, version, submitter);
 
-        return (documents[name][version].url, version, submitter, timeStamp, documents[name][version].keys[msg.sender]);
+        return (
+        documents[name][version].url, version, submitter, timeStamp/*, documents[name][version].keys[msg.sender]*/
+        );
     }
 
     // does not validate state transitions
@@ -120,7 +126,7 @@ contract Transport {
         currentState = newState;
     }
 
-    function GetState() public view returns (string) {
+    function getState() public view returns (string) {
         require(isKnownRole(msg.sender), "role is not part of this transport");
 
         return currentState;

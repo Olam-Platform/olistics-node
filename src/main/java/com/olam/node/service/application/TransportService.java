@@ -7,19 +7,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-public class ShipmentService {
+public class TransportService {
 
     @Autowired
     private DataStorageService dataStorageService;
     @Autowired
     private EthereumNodeService ethereumNode;
 
-    public void createShipment(List<Participant> participants, String signedTransaction){
-
+    public void createShipment(List<Participant> participants, String signedTransaction) {
         //check valid participants
         //get public key from signed transaction
         //relay transaction to blockchain
-         ethereumNode.relaySignedTransaction(signedTransaction);
-
+        //ethereumNode.sendTransaction(signedTransaction);
     }
 }

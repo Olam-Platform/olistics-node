@@ -34,8 +34,9 @@ public class IPFSDataStorageService implements DataStorageService {
 
 
     private String save(byte[] data, boolean hashOnly) {
-
         String hash = null;
+
+        /*
         try {
             NamedStreamable.ByteArrayWrapper streamable = new NamedStreamable.ByteArrayWrapper(data);
             MerkleNode node = ipfs.add(streamable,false,hashOnly).get(0);
@@ -44,6 +45,8 @@ public class IPFSDataStorageService implements DataStorageService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        */
+
         return hash;
     }
 
