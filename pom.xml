@@ -39,23 +39,30 @@
         <dependency>
             <groupId>com.github.ipfs</groupId>
             <artifactId>java-ipfs-api</artifactId>
-            <version>v1.2.0</version>
+            <version>v1.2.1</version>
         </dependency>
 
-        <!--IPFS cluster java api - used latest commit hash-->
+        <dependency>
+            <groupId>com.github.multiformats</groupId>
+            <artifactId>java-multiaddr</artifactId>
+            <version>v1.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.multiformats</groupId>
+            <artifactId>java-multihash</artifactId>
+            <version>v1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.multiformats</groupId>
+            <artifactId>java-multibase</artifactId>
+            <version>v1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ipld</groupId>
+            <artifactId>java-cid</artifactId>
+            <version>v1.1.0</version>
+        </dependency>
 
-
-        <!--<dependency>-->
-        <!--    <groupId>com.github.IpfsBattery</groupId>h-->
-        <!--    <artifactId>java-ipfs-cluster-api</artifactId>h-->
-        <!--    <version>e33c5c19f3a99c7ea4fee12ee49c174395a68914</version>h-->
-        <!--</dependency>h-->
-
-        <!--<dependency>-->
-            <!--<groupId>io.ipfs.cluster</groupId>-->
-            <!--<artifactId>api</artifactId>-->
-            <!--<version>v0.0.1</version>-->
-        <!--</dependency>-->
 
         <dependency>
             <groupId>org.apache.tika</groupId>
@@ -68,11 +75,6 @@
             <artifactId>core</artifactId>
             <version>3.5.0</version>
         </dependency>
-        <!--<dependency>-->
-        <!--    <groupId>org.web3j</groupId>-->
-        <!--    <artifactId>quorum</artifactId>-->
-        <!--    <version>0.9.0</version>-->
-        <!--</dependency>-->
     </dependencies>
 
     <build>
