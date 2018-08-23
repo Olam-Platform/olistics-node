@@ -3,10 +3,13 @@ package com.olam.node.service.infrastructure;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.tuples.generated.Tuple2;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
 
@@ -14,10 +17,13 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implements EthereumNodeService {
-    private final int WAIT_TX_INTERVAL        =  5000;     // in milliseconds
-    private final int WAIT_TX_MAX_TRIES       =    20;
+    private final int WAIT_TX_INTERVAL        = 10000;     // in milliseconds
+    private final int RINKEBY_AVERAGE_TX_TIME = 15000;
+    private final int WAIT_TX_MAX_TRIES       =    10;
 
     protected Admin ethAdmin;
 
@@ -34,6 +40,16 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     @Override
     public Transport loadTransportContract(Credentials credentials, String contractAddress) {
         return Transport.load(contractAddress, web3j, credentials, gasPrice, gasLimit);
+    }
+
+    @Override
+    public void submitDocument(Credentials credentials, String contractAddress, String docName, String docUrl) {
+
+    }
+
+    @Override
+    public Tuple2<String, byte[]> requestDocument(String contractAddress, String docName) {
+        return null;
     }
 
     @Override
@@ -59,14 +75,21 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     }
 
     @Override
-    public String sendDeployTransaction(String deployTransaction) {
-        String contractAddress = null;
+    public String sendDeployTx(String signedTx) {
+        return sendTx(signedTx).get().getContractAddress();
+    }
+
+    @Override
+    public void sendSubmitDocTx(String signedTx) {
+        sendTx(signedTx);
+    }
+
+    private Optional<TransactionReceipt> sendTx(String tx) {
+        Optional<TransactionReceipt> result = null;
         EthGetTransactionReceipt receipt;
 
         try {
-            EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(deployTransaction).send();
-            // in milliseconds
-            int RINKEBY_AVERAGE_TX_TIME = 20000;
+            EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(tx).send();
             Thread.sleep(RINKEBY_AVERAGE_TX_TIME);
 
             int nRetries = 0;
@@ -78,20 +101,20 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
                 if (transactionHash != null) {
                     receipt = web3j.ethGetTransactionReceipt(transactionHash).send();
                     if (receipt.getTransactionReceipt().isPresent()) {
-                        contractAddress = receipt.getTransactionReceipt().get().getContractAddress();
+                        result = receipt.getTransactionReceipt();
                     }
                 }
 
-                if(contractAddress == null) {
+                if(result == null) {
                     Thread.sleep(WAIT_TX_INTERVAL);
                 }
 
                 nRetries++;
-            } while ((nRetries < WAIT_TX_MAX_TRIES) && (contractAddress == null));
+            } while ((nRetries < WAIT_TX_MAX_TRIES) && (result == null));
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
 
-        return contractAddress;
+        return result;
     }
 }

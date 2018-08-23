@@ -3,13 +3,10 @@ package com.olam.node.service.infrastructure;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.web3j.crypto.RawTransaction;
-import org.web3j.tuples.generated.Tuple5;
+import org.web3j.tuples.generated.Tuple4;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertFalse;
@@ -37,17 +34,18 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
         }
     }
 
+    // < online
     @Test
     public void testLoadContract() {
         try {
             // deploy
             Transport contract = deployTransportContract();
-            assert(contract != null);
-            assert(!contract.getContractAddress().isEmpty());
+            assertNotNull(contract);
+            assertFalse(contract.getContractAddress().isEmpty());
 
             // load
             contract = loadTransportContract(contract.getContractAddress());
-            assert(contract != null);
+            assertNotNull(contract);
 
             verifyContractInitialState(contract);
         } catch (Exception e) {
@@ -56,7 +54,7 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
     }
 
     @Test
-    public void testDocSubmitRequest() {
+    public void testSubmitRequestDoc() {
         try {
             // load
             Transport contract = deployTransportContract();
@@ -73,29 +71,29 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
             List<byte[]> keys = Arrays.asList(symmetricKey1, symmetricKey2, symmetricKey3);
 
             transportContract.submitDocument("AirwayBill", "AirwayBill hash from IPFS", BigInteger.valueOf(msecSinceEpoc), recipients, keys).send();
-            Tuple5<String, BigInteger, String, BigInteger, byte[]> document = transportContract.requestDocument("AirwayBill").sendAsync().get();
+            Tuple4<String, BigInteger, String, BigInteger/*, byte[]*/> document = transportContract.requestDocument("AirwayBill").send();
 
             assert (document.getValue1().equals("AirwayBill hash from IPFS"));      // verify url
             assert (document.getValue2().intValue() == 0);                          // verify version
             assert (document.getValue3().equals(managerCredentials.getAddress()));  // verify submitter address
             assert (document.getValue4().longValue() == msecSinceEpoc);             // verify timestamp
-            assert (document.getValue5()[0] == symmetricKey1[0]);                   // verify symmetric key
+            //assert (document.getValue5()[0] == symmetricKey1[0]);                   // verify symmetric key
 
             transportContract.submitDocument("AirwayBill", "AirwayBill hash from IPFS", BigInteger.valueOf(msecSinceEpoc), recipients, keys).send();
-            document = transportContract.requestDocument("AirwayBill").sendAsync().get();
+            document = transportContract.requestDocument("AirwayBill").send();
 
             assert (document.getValue1().equals("AirwayBill hash from IPFS"));      // verify url
             assert (document.getValue2().intValue() == 1);                          // verify version
             assert (document.getValue3().equals(managerCredentials.getAddress()));  // verify submitter address
             assert (document.getValue4().longValue() == msecSinceEpoc);             // verify timestamp
-            assert (document.getValue5()[0] == symmetricKey1[0]);                   // verify symmetric key
+            //assert (document.getValue5()[0] == symmetricKey1[0]);                   // verify symmetric key
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     @Test
-    public void testSendDeployTransaction() {
+    public void testSendDeployTx() {
         try {
             long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
             RawTransaction deployTransaction = nodeService.buildDeployTx(
@@ -108,7 +106,7 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
             assertNotNull(signedTransaction);
             assertFalse(signedTransaction.isEmpty());
 
-            String contractAddress = nodeService.sendDeployTransaction(signedTransaction);
+            String contractAddress = nodeService.sendDeployTx(signedTransaction);
             assertNotNull(contractAddress);
             assertFalse(contractAddress.isEmpty());
 
@@ -117,6 +115,95 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
 
             verifyContractInitialState(contract);
         } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testSendSubmitDocTx() {
+        final String DOC_NAME = "Payment request";
+
+        try {
+            String contractAddress = deployTransportContract().getContractAddress();
+
+            long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
+            List<String> recipientsAddresses = Arrays.asList(shipperCredentials.getAddress(), receiverCredentials.getAddress());
+            List<byte[]> keys = new ArrayList<>();
+
+            byte[] key1 = new byte[32];
+            byte[] key2 = new byte[32];
+
+            keys.add(key1);
+            keys.add(key2);
+
+            for (int i = 0 ; i < 2 ; i++) {
+                RawTransaction submitDcoTx = nodeService.buildSubmitDocTx(
+                        managerCredentials.getAddress(), contractAddress, DOC_NAME, "some IPFS shit-hash", recipientsAddresses, keys, msecSinceEpoc
+                );
+
+                assertNotNull(submitDcoTx);
+
+                String signedTransaction = nodeService.signTransaction(submitDcoTx, managerCredentials);
+                assertNotNull(signedTransaction);
+                assertFalse(signedTransaction.isEmpty());
+
+                nodeService.sendSubmitDocTx(signedTransaction);
+
+                Transport contract = nodeService.loadTransportContract(managerCredentials, contractAddress);
+
+                Tuple4<String, BigInteger, String, BigInteger> document = contract.requestDocument(DOC_NAME).sendAsync().get();
+
+                assert (document.getValue1().equals("AirwayBill hash from IPFS"));      // verify url
+                assert (document.getValue2().intValue() == 1);                          // verify version
+                assert (document.getValue3().equals(managerCredentials.getAddress()));  // verify submitter address
+                assert (document.getValue4().longValue() == msecSinceEpoc);             // verify timestamp
+                //assert (document.getValue5()[0] == key1[0]);                            // verify symmetric key
+                //assert (document.getValue5()[1] == key1[1]);                            // verify symmetric key
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testSendRequestDocTx() {
+        final String DOC_NAME = "Payment request";
+        final String DOC_URL = "some IPFS shit-hash";
+
+
+        try {
+            String contractAddress = deployTransportContract().getContractAddress();
+
+            long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
+            List<String> recipientsAddresses = Arrays.asList(shipperCredentials.getAddress(), receiverCredentials.getAddress());
+            List<byte[]> keys = new ArrayList<>();
+
+            byte[] key1 = new byte[32];
+            byte[] key2 = new byte[32];
+
+            keys.add(key1);
+            keys.add(key2);
+
+            for (int i = 0 ; i < 2 ; i++) {
+                // online tx
+                nodeService.submitDocument(managerCredentials, contractAddress, DOC_NAME, DOC_URL);
+
+                Transport contract = nodeService.loadTransportContract(managerCredentials, contractAddress);
+
+                Tuple4<String, BigInteger, String, BigInteger> document = contract.requestDocument(DOC_NAME).sendAsync().get();
+
+                assert (document.getValue1().equals("AirwayBill hash from IPFS"));      // verify url
+                assert (document.getValue2().intValue() == 1);                          // verify version
+                assert (document.getValue3().equals(managerCredentials.getAddress()));  // verify submitter address
+                assert (document.getValue4().longValue() == msecSinceEpoc);             // verify timestamp
+                //assert (document.getValue5()[0] == key1[0]);                            // verify symmetric key
+                //assert (document.getValue5()[1] == key1[1]);                            // verify symmetric key
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -141,7 +228,7 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
     private void verifyContractInitialState(Transport contract) {
         try {
             // verify state
-            assert (contract.GetState().send().equals("none"));
+            assert (contract.getState().send().equals("none"));
 
             // verify address => role
             assert (contract.getRole(managerCredentials.getAddress()).send().equals("manager"));

@@ -7,8 +7,8 @@ import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.WalletUtils;
+import org.web3j.protocol.core.methods.request.Transaction;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -47,17 +47,40 @@ public class OfflineEthereumServiceImplTest {
     }
 
     @Test
-    public void testCreateDeployTransaction() {
-        RawTransaction deployTransaction = createDeployTransaction(
-                managerCredentials.getAddress(), shipperCredentials.getAddress(), receiverCredentials.getAddress()
-        );
+    public void testBuildDeployTx() {
+        RawTransaction deployTx = buildDeployTx(managerCredentials.getAddress(), shipperCredentials.getAddress(), receiverCredentials.getAddress());
 
-        assert(deployTransaction != null);
+        assertNotNull(deployTx);
     }
 
     @Test
-    public void testSignTransaction() {
-        RawTransaction deployTransaction = createDeployTransaction(
+    public void testBuildSubmitDocTx() {
+        List<String> recipientsAddresses = Arrays.asList(shipperCredentials.getAddress(), receiverCredentials.getAddress());
+        List<byte[]> keys = new ArrayList<>();
+
+        byte[] key1 = new byte[32];
+        byte[] key2 = new byte[32];
+
+        keys.add(key1);
+        keys.add(key2);
+
+        RawTransaction tx = buildSubmitDocTx(managerCredentials.getAddress(), "", "docName", "docUrl", recipientsAddresses, keys);
+
+        assertNotNull(tx);
+    }
+
+    @Test
+    public void testBuildRequestDocTx() {
+        RawTransaction tx1 = buildRequestDocTx(managerCredentials.getAddress(), "", "docName");
+        assertNotNull(tx1);
+
+        RawTransaction tx2 = buildRequestDocTx(managerCredentials.getAddress(), "", "docName", 0);
+        assertNotNull(tx2);
+    }
+
+    @Test
+    public void testSignTx() {
+        RawTransaction deployTransaction = buildDeployTx(
                 managerCredentials.getAddress(), shipperCredentials.getAddress(), receiverCredentials.getAddress()
         );
 
@@ -86,18 +109,61 @@ public class OfflineEthereumServiceImplTest {
         }
     }
 
-    private RawTransaction createDeployTransaction(String deployerAddress, String shipperAddress, String receiverAddress) {
+    private RawTransaction buildDeployTx(String fromAddress, String shipperAddress, String receiverAddress) {
         RawTransaction rawTransaction = null;
 
         try {
             long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
-            rawTransaction = nodeService.buildDeployTx(deployerAddress, shipperAddress, receiverAddress , msecSinceEpoc);
+            rawTransaction = nodeService.buildDeployTx(fromAddress, shipperAddress, receiverAddress , msecSinceEpoc);
 
-            assert(rawTransaction != null);
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
 
+        assertNotNull(rawTransaction);
         return rawTransaction;
+    }
+
+    private RawTransaction buildSubmitDocTx(String fromAddress, String contractAddress, String docName, String docUrl, List<String> recipients, List<byte[]> keys) {
+        RawTransaction tx = null;
+
+        try {
+            long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
+            tx = nodeService.buildSubmitDocTx(fromAddress, contractAddress, docName , docUrl, recipients, keys, msecSinceEpoc);
+
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        assertNotNull(tx);
+        return tx;
+    }
+
+    private RawTransaction buildRequestDocTx(String fromAddress, String contractAddress, String docName) {
+        RawTransaction tx = null;
+
+        try {
+            tx = nodeService.buildRequestDocTx(fromAddress, contractAddress, docName);
+
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        assertNotNull(tx);
+        return tx;
+    }
+
+    private RawTransaction buildRequestDocTx(String fromAddress, String contractAddress, String docName, int docVersion) {
+        RawTransaction tx = null;
+
+        try {
+            tx = nodeService.buildRequestDocTx(fromAddress, contractAddress, docName, docVersion);
+
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        assertNotNull(tx);
+        return tx;
     }
 }

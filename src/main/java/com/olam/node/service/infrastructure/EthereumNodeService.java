@@ -1,6 +1,8 @@
 package com.olam.node.service.infrastructure;
 
 import org.web3j.crypto.Credentials;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.tuples.generated.Tuple2;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,15 +16,18 @@ public interface EthereumNodeService {
     // load a Transport contract
     Transport loadTransportContract(Credentials credentials, String contractAddress);
 
-    // get node's accounts
+    void submitDocument(Credentials credentials, String contractAddress, String docName, String docUrl);
+
+    Tuple2<String, byte[]> requestDocument(String contractAddress, String docName);
+
     List<String> getAccounts() throws IOException;
 
     void sendEther(Credentials credentials, String recipient, float sum) throws Exception;
 
-    float getEtherBalance(String aacountAddress) throws IOException;
+    float getEtherBalance(String accountAddress) throws IOException;
 
-    // returns deployed contract address
-    String sendDeployTransaction(String deployTransaction);
+    // sending offline prepared and signed transactions
+    String sendDeployTx(String signedTx);
 
-    //String sendTransaction(String signedTransaction);
+    void sendSubmitDocTx(String signedTx);
 }
