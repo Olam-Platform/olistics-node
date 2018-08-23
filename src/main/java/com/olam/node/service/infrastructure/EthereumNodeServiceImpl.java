@@ -1,6 +1,7 @@
 package com.olam.node.service.infrastructure;
 
 import com.olam.node.sdk.Transport;
+import org.springframework.stereotype.Service;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;

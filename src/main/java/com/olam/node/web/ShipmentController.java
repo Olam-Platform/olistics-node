@@ -1,6 +1,7 @@
 package com.olam.node.web;
 
 import com.olam.node.service.infrastructure.DataStorageService;
+import com.olam.node.service.infrastructure.EthereumNodeService;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.metadata.Metadata;
@@ -26,19 +27,36 @@ public class ShipmentController {
 
     @Autowired
     private DataStorageService dataStorageService;
+    @Autowired
+    private EthereumNodeService ethereumService;
+
     private Detector detector = new DefaultDetector();
 
 
 //    @PostMapping
-//    public String createShipment(@RequestParam("recipients") String recipients, @RequestParam("signedTransaction") String trx){
+//    public String createShipment(@RequestParam("participants") String participants, @RequestParam("deployTransaction") String trx){
 //        //check permission to create shipment
 //        //check valid recipients
+//
 //        //relay transaction to blockchain
 //        //get transaction hash and send back to user
-//
+//        return "fix";
 //    }
 
     @PostMapping
+    public String createShipment(@RequestParam("deployTransaction") String trx){
+        //check permission to create shipment
+        //check valid recipients
+
+        //relay transaction to blockchain
+        String address = ethereumService.relaySignedTransaction(trx);
+        //get transaction hash and send back to user
+
+        return address;
+    }
+
+
+    @PostMapping("/document")
     public String submitNewData(@RequestParam("data") MultipartFile data) {
         String fileHash = null;
         try {

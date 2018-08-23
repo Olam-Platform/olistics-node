@@ -1,44 +1,33 @@
 package com.olam.node.service.infrastructure;
 
-import com.olam.node.Application;
-import com.olam.node.sdk.Transport;
 import com.olam.node.utils.Web3jUtils;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.ResourceUtils;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.admin.Admin;
-import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Numeric;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.concurrent.ExecutionException;
-
-import static org.junit.Assert.assertFalse;
 
 
 @RunWith(SpringRunner.class)
 @TestPropertySource(
         locations = "classpath:application-integrationtest.properties")
 public class EthereumNodeServiceImplTest {
+
 
     private static final String WALLET_PASSWORD = "";
     private final BigInteger GAS_LIMIT = BigInteger.valueOf(5000000);
@@ -83,11 +72,15 @@ public class EthereumNodeServiceImplTest {
                 new String(Files.readAllBytes(Paths.get(transportBIN.getPath()))));
 
         byte[] signedMessage = TransactionEncoder.signMessage(rawTrx, credentials);
+        String message = "olam";
         String hexValue = Numeric.toHexString(signedMessage);
-        EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
+        EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send();
         String transactionHash = ethSendTransaction.getTransactionHash();
         TransactionReceipt transactionReceipt = utils.waitForTransactionReceipt(transactionHash);
         transactionReceipt.getContractAddress();
 
+        Sign.SignatureData signatureData = Sign.signMessage(message.getBytes(), credentials.getEcKeyPair());
+        System.out.println("sig data: " + signatureData.toString());
+        BigInteger key = Sign.signedMessageToKey(message.getBytes(), signatureData);
     }
 }
