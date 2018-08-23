@@ -1,5 +1,7 @@
 package com.olam.node.service.infrastructure;
 
+
+import com.olam.node.sdk.ShipmentImpl;
 import com.olam.node.utils.Web3jUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,12 +23,13 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
 
 
 @RunWith(SpringRunner.class)
 @TestPropertySource(
         locations = "classpath:application-integrationtest.properties")
-public class EthereumNodeServiceImplTest {
+public class EthereumNodeServiceImplIntegrationTest {
 
 
     private static final String WALLET_PASSWORD = "";
@@ -39,16 +42,18 @@ public class EthereumNodeServiceImplTest {
     private Web3j web3j;
     private Credentials credentials;
     private File transportBIN;
+    public ShipmentImpl shipment;
 
     private Web3jUtils utils;
 
     @Before
     public void setup() throws IOException, CipherException {
 
+
         String url = environment.getProperty("rpc.url.rinkeby");
         service = new EthereumNodeServiceImpl(url);
         utils = new Web3jUtils(url);
-
+        shipment = new ShipmentImpl(url);
 
         //setup for creating a raw transaction
         web3j = Web3j.build(new HttpService(url));
@@ -82,5 +87,12 @@ public class EthereumNodeServiceImplTest {
         Sign.SignatureData signatureData = Sign.signMessage(message.getBytes(), credentials.getEcKeyPair());
         System.out.println("sig data: " + signatureData.toString());
         BigInteger key = Sign.signedMessageToKey(message.getBytes(), signatureData);
+    }
+
+    @Test
+    public void createShipment() throws ExecutionException, InterruptedException {
+        shipment.createShipment(credentials, credentials.getAddress(),
+                "0xb55Ec2c9eD8728b14d308E1e21b95a039133372f",
+                "0xF9c7dFE0c3597D9DfD3457b8DFD5A6F26b2Ef7a9");
     }
 }

@@ -54,11 +54,11 @@ public class EthereumCryptoService implements CryptoService {
 //    }
 
 
-    private PublicKey convertBytesToPublicKey(byte[] publicKey) throws NoSuchProviderException, NoSuchAlgorithmException,
+    private PublicKey convertBytesToPublicKey(byte[] publicKey) throws NoSuchAlgorithmException,
             InvalidKeySpecException {
 
         KeyFactory factory = KeyFactory.getInstance("EC");
-        PublicKey ecPublicKey = (ECPublicKey) factory.generatePublic(new X509EncodedKeySpec(publicKey));
+        PublicKey ecPublicKey = factory.generatePublic(new X509EncodedKeySpec(publicKey));
         return ecPublicKey;
     }
 //

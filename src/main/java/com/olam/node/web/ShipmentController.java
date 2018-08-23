@@ -49,7 +49,7 @@ public class ShipmentController {
         //check valid recipients
 
         //relay transaction to blockchain
-        String address = ethereumService.relaySignedTransaction(trx);
+        String address = ethereumService.sendDeployTx(trx);
         //get transaction hash and send back to user
 
         return address;

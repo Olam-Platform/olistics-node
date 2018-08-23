@@ -9,7 +9,7 @@ public interface CryptoService {
 
     SecretKeySpec generateSymmetricKey(int length, String algorithm);
 
-    byte[] encryptData(byte[] data, SecretKeySpec symmetricKey, String cipherAlgorithm) throws InvalidKeyException, GeneralSecurityException;
+    byte[] encryptData(byte[] data, SecretKeySpec symmetricKey, String cipherAlgorithm) throws GeneralSecurityException;
 
     byte[] encryptKey(PublicKey keyToEncrypt, SecretKeySpec symmetricKey, String cipherAlgorithm) throws GeneralSecurityException;
 

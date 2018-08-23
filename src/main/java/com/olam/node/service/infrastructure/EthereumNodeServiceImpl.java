@@ -3,7 +3,6 @@ package com.olam.node.service.infrastructure;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
@@ -18,7 +17,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implements EthereumNodeService {
     private final int WAIT_TX_INTERVAL        = 10000;     // in milliseconds
@@ -27,7 +25,7 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
 
     protected Admin ethAdmin;
 
-    EthereumNodeServiceImpl(String rpcUrl) {
+    public EthereumNodeServiceImpl(String rpcUrl) {
         super(rpcUrl);
         ethAdmin = Admin.build(new HttpService(RPC_URL));
     }
