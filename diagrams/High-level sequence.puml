@@ -1,0 +1,52 @@
+@startuml
+
+title __Creating Shipment + booking transportation - high level overview__
+actor shipper as s
+box "Olam Node" #LightBlue
+participant "Olam backend 1" as on1
+database "Ethereum Private 1" as ep1
+database "IPFS 1" as ip1
+end box
+box "Olam Node" #LightGreen
+database "IPFS 2" as ip2
+database "Ethereum Private 2" as ep2
+participant "Olam backend 2" as on2
+end box
+actor carrier as c
+
+'carrier subscribe to events
+c -> on2 : subscribe to shipment events request
+on2 -> on2 : subscribe to events request
+
+'shipper subscribe to events
+s -> on1 : subscribe to shipment events request
+on1 -> on1 : subscribe to events request
+
+'shipper creates shipment
+s -> on1 : create shipment request
+on1 -> ep1 : create shipment contract
+ep1 -> ep2
+ep1 --> on1 : create shipment contract response
+on1 -> s : create shipment request response
+
+'carrier recieves event
+ep2 -> on2 : shipment created event
+on2 -> c : shipment event
+
+'shipper starts with transportation booking message
+s -> on1 : submit transportation booking request
+on1 -> on1 : encrypts data
+on1 -> ip1 : store encrypted data request
+ip1 -> ip2
+ip1 -> on1 : store data response
+on1 -> ep1 : store data hash request
+ep1 -> ep2
+ep1 -> on1 : store data hash response
+ep2 -> on2 : booking request event
+on2 -> carrier : booking request event
+on1 -> s : create booking request response
+
+
+
+
+@enduml

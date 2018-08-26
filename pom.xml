@@ -36,7 +36,6 @@
             <scope>test</scope>
         </dependency>
 
-
         <dependency>
             <groupId>com.github.ipfs</groupId>
             <artifactId>java-ipfs-api</artifactId>
@@ -44,11 +43,13 @@
         </dependency>
 
         <!--IPFS cluster java api - used latest commit hash-->
-        <dependency>
-            <groupId>com.github.IpfsBattery</groupId>
-            <artifactId>java-ipfs-cluster-api</artifactId>
-            <version>e33c5c19f3a99c7ea4fee12ee49c174395a68914</version>
-        </dependency>
+
+
+        <!--<dependency>-->
+        <!--    <groupId>com.github.IpfsBattery</groupId>h-->
+        <!--    <artifactId>java-ipfs-cluster-api</artifactId>h-->
+        <!--    <version>e33c5c19f3a99c7ea4fee12ee49c174395a68914</version>h-->
+        <!--</dependency>h-->
 
         <!--<dependency>-->
             <!--<groupId>io.ipfs.cluster</groupId>-->
@@ -62,6 +63,16 @@
             <version>1.18</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.web3j</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.0</version>
+        </dependency>
+        <!--<dependency>-->
+        <!--    <groupId>org.web3j</groupId>-->
+        <!--    <artifactId>quorum</artifactId>-->
+        <!--    <version>0.9.0</version>-->
+        <!--</dependency>-->
     </dependencies>
 
     <build>
