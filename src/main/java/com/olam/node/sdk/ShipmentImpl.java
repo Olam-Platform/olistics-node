@@ -1,6 +1,6 @@
 package com.olam.node.sdk;
 
-import com.olam.node.service.infrastructure.OfflineEthereumServiceImpl;
+import com.olam.node.service.infrastructure.blockchain.OfflineEthereumServiceImpl;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
@@ -36,7 +36,7 @@ public class ShipmentImpl implements Shipment {
         ///    send the contract's address back to the user as a shipment id to be used as a reference for future actions
         /// ------------------------------------------------------------------------------------------------------------------
 
-        return null;
+        return signedDeployTx;
     }
 
     @Override
