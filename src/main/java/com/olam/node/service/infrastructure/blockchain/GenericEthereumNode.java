@@ -1,4 +1,4 @@
-package com.olam.node.service.infrastructure;
+package com.olam.node.service.infrastructure.blockchain;
 
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
@@ -9,8 +9,8 @@ import java.math.BigInteger;
 public class GenericEthereumNode {
     protected Web3j web3j;
 
-    BigInteger gasPrice = BigInteger.valueOf(220000000L);
-    BigInteger gasLimit = BigInteger.valueOf(4300000);
+    public BigInteger gasPrice = BigInteger.valueOf(220000000L);
+    public BigInteger gasLimit = BigInteger.valueOf(4300000);
 
     final String RPC_URL;
 

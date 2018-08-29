@@ -1,4 +1,4 @@
-package com.olam.node.service.infrastructure;
+package com.olam.node.service.infrastructure.storage;
 
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;

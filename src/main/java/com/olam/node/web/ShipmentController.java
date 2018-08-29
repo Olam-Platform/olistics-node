@@ -1,7 +1,7 @@
 package com.olam.node.web;
 
-import com.olam.node.service.infrastructure.DataStorageService;
-import com.olam.node.service.infrastructure.EthereumNodeService;
+import com.olam.node.service.infrastructure.storage.DataStorageService;
+import com.olam.node.service.infrastructure.blockchain.EthereumNodeService;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.metadata.Metadata;

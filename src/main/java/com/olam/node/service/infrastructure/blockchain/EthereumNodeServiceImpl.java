@@ -1,5 +1,6 @@
-package com.olam.node.service.infrastructure;
+package com.olam.node.service.infrastructure.blockchain;
 
+import com.olam.node.service.infrastructure.Transport;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -14,7 +15,6 @@ import org.web3j.utils.Convert;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,16 +28,6 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     public EthereumNodeServiceImpl(String rpcUrl) {
         super(rpcUrl);
         ethAdmin = Admin.build(new HttpService(RPC_URL));
-    }
-
-    @Override
-    public Transport deployTransportContract(Credentials credentials, String shipperAddress, String receiverAddress, long msecSinceEpoc) throws Exception {
-        return Transport.deploy(web3j, credentials, gasPrice, gasLimit, shipperAddress, receiverAddress, BigInteger.valueOf(msecSinceEpoc)).send();
-    }
-
-    @Override
-    public Transport loadTransportContract(Credentials credentials, String contractAddress) {
-        return Transport.load(contractAddress, web3j, credentials, gasPrice, gasLimit);
     }
 
     @Override
@@ -58,6 +48,16 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     @Override
     public String createAccount(String password) throws IOException {
         return ethAdmin.personalNewAccount(password).send().getAccountId();
+    }
+
+    @Override
+    public Transport deployTransportContract(Credentials credentials, String shipperAddress, String receiverAddress, long msecSinceEpoc) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Transport loadTransportContract(Credentials credentials, String contractAddress) {
+        return null;
     }
 
     @Override

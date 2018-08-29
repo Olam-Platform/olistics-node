@@ -1,5 +1,6 @@
 package com.olam.node.service.infrastructure;
 
+import com.olam.node.service.infrastructure.blockchain.GenericEthereumNode;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
