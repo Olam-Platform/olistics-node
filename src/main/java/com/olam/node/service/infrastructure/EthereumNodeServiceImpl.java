@@ -27,7 +27,7 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
 
     protected Admin ethAdmin;
 
-    EthereumNodeServiceImpl(String rpcUrl) {
+    public EthereumNodeServiceImpl(String rpcUrl) {
         super(rpcUrl);
         ethAdmin = Admin.build(new HttpService(RPC_URL));
     }

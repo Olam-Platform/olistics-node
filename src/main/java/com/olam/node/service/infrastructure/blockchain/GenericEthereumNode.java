@@ -12,7 +12,7 @@ public class GenericEthereumNode {
     public BigInteger gasPrice = BigInteger.valueOf(220000000L);
     public BigInteger gasLimit = BigInteger.valueOf(4300000);
 
-    final String RPC_URL;
+    public final String RPC_URL;
 
     public GenericEthereumNode(String rpcUrl) {
         this.RPC_URL = rpcUrl;

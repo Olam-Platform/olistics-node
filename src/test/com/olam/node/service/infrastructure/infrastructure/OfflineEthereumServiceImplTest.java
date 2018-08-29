@@ -1,5 +1,6 @@
-package com.olam.node.service.infrastructure;
+package com.olam.node.service.infrastructure.infrastructure;
 
+import com.olam.node.service.infrastructure.OfflineEthereumServiceImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.util.ResourceUtils;
