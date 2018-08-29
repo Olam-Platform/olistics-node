@@ -36,6 +36,7 @@
             <scope>test</scope>
         </dependency>
 
+
         <dependency>
             <groupId>com.github.ipfs</groupId>
             <artifactId>java-ipfs-api</artifactId>
@@ -62,7 +63,6 @@
             <artifactId>java-cid</artifactId>
             <version>v1.1.0</version>
         </dependency>
-
 
         <dependency>
             <groupId>org.apache.tika</groupId>
