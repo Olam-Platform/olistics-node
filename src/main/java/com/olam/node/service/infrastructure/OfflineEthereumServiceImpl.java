@@ -1,5 +1,6 @@
 package com.olam.node.service.infrastructure;
 
+import com.olam.node.service.infrastructure.blockchain.GenericEthereumNode;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
@@ -46,7 +47,7 @@ public class OfflineEthereumServiceImpl extends GenericEthereumNode implements O
         BigInteger nonce = web3j.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).sendAsync().get().getTransactionCount();
 
         String encodedConstructor = FunctionEncoder.encodeConstructor(
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(shipperAddress),
+                Arrays.asList(new org.web3j.abi.datatypes.Address(shipperAddress),
                 new org.web3j.abi.datatypes.Address(receiverAddress),
                 new org.web3j.abi.datatypes.generated.Uint256(timeStamp))
         );
@@ -63,14 +64,14 @@ public class OfflineEthereumServiceImpl extends GenericEthereumNode implements O
 
         final Function function = new Function(
                 Transport.FUNC_SUBMITDOCUMENT,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(docName),
+                Arrays.asList(new org.web3j.abi.datatypes.Utf8String(docName),
                         new org.web3j.abi.datatypes.Utf8String(docUrl),
                         new org.web3j.abi.datatypes.generated.Uint256(timeStamp),
                         new org.web3j.abi.datatypes.DynamicArray<org.web3j.abi.datatypes.Address>(
                                 org.web3j.abi.Utils.typeMap(recipients, org.web3j.abi.datatypes.Address.class)),
                         new org.web3j.abi.datatypes.DynamicArray<org.web3j.abi.datatypes.generated.Bytes32>(
                                 org.web3j.abi.Utils.typeMap(keyList, org.web3j.abi.datatypes.generated.Bytes32.class))),
-                Collections.<TypeReference<?>>emptyList());
+                Collections.emptyList());
 
         String encodedFunction = FunctionEncoder.encode(function);
 
@@ -83,8 +84,8 @@ public class OfflineEthereumServiceImpl extends GenericEthereumNode implements O
 
         final Function function = new Function(
                 Transport.FUNC_REQUESTDOCUMENT,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(docName)),
-                Arrays.<TypeReference<?>>asList(
+                Arrays.asList(new org.web3j.abi.datatypes.Utf8String(docName)),
+                Arrays.asList(
                         new TypeReference<Utf8String>() {},
                         new TypeReference<Uint256>() {},
                         new TypeReference<Address>() {},
@@ -104,10 +105,10 @@ public class OfflineEthereumServiceImpl extends GenericEthereumNode implements O
 
         final Function function = new Function(
                 Transport.FUNC_REQUESTDOCUMENT,
-                Arrays.<Type>asList(
+                Arrays.asList(
                         new org.web3j.abi.datatypes.Utf8String(docName),
                         new org.web3j.abi.datatypes.generated.Uint256(docVersion)),
-                Arrays.<TypeReference<?>>asList(
+                Arrays.asList(
                         new TypeReference<Utf8String>() {},
                         new TypeReference<Uint256>() {},
                         new TypeReference<Address>() {},
