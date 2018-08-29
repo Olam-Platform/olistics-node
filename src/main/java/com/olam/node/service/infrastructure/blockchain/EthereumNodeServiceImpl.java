@@ -1,7 +1,7 @@
 package com.olam.node.service.infrastructure.blockchain;
 
 import com.olam.node.service.infrastructure.Transport;
-import org.web3j.crypto.Credentials;
+import org.web3j.crypto.*;
 import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
@@ -12,22 +12,37 @@ import org.web3j.protocol.http.HttpService;
 import org.web3j.tuples.generated.Tuple2;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
+import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implements EthereumNodeService {
-    private final int WAIT_TX_INTERVAL        = 10000;     // in milliseconds
+    private final int WAIT_TX_INTERVAL = 10000;     // in milliseconds
     private final int RINKEBY_AVERAGE_TX_TIME = 15000;
-    private final int WAIT_TX_MAX_TRIES       =    10;
+    private final int WAIT_TX_MAX_TRIES = 10;
+    private final String PERSONAL_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n";
+    private final String MESSAGE = "RULE THE OLAM";
 
     protected Admin ethAdmin;
 
     public EthereumNodeServiceImpl(String rpcUrl) {
         super(rpcUrl);
         ethAdmin = Admin.build(new HttpService(RPC_URL));
+    }
+
+    @Override
+    public Transport deployTransportContract(Credentials credentials, String shipperAddress, String receiverAddress, long msecSinceEpoc) throws Exception {
+        return Transport.deploy(web3j, credentials, gasPrice, gasLimit, shipperAddress, receiverAddress, BigInteger.valueOf(msecSinceEpoc)).send();
+    }
+
+    @Override
+    public Transport loadTransportContract(Credentials credentials, String contractAddress) {
+        return Transport.load(contractAddress, web3j, credentials, gasPrice, gasLimit);
     }
 
     @Override
@@ -48,16 +63,6 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     @Override
     public String createAccount(String password) throws IOException {
         return ethAdmin.personalNewAccount(password).send().getAccountId();
-    }
-
-    @Override
-    public Transport deployTransportContract(Credentials credentials, String shipperAddress, String receiverAddress, long msecSinceEpoc) throws Exception {
-        return null;
-    }
-
-    @Override
-    public Transport loadTransportContract(Credentials credentials, String contractAddress) {
-        return null;
     }
 
     @Override
@@ -82,6 +87,21 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
         sendTx(signedTx);
     }
 
+    @Override
+    public boolean checkWritePermission(String signature, String shipmentId){
+
+        BigInteger publicKey = getPublicKey(signature);
+        Transport shipment = Transport.load(shipmentId, this.web3j, credentials, gasPrice, gasLimit);
+        String role = null;
+        try {
+            role = shipment.getRole(publicKey.toString()).send();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return role.equals("Manager");
+    }
+
+
     private Optional<TransactionReceipt> sendTx(String tx) {
         Optional<TransactionReceipt> result = null;
         EthGetTransactionReceipt receipt;
@@ -103,7 +123,7 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
                     }
                 }
 
-                if(result == null) {
+                if (result == null) {
                     Thread.sleep(WAIT_TX_INTERVAL);
                 }
 
@@ -115,4 +135,46 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
 
         return result;
     }
+
+    /*******PRIVATE UTILITY METHODS *****************/
+
+    private Sign.SignatureData getSignatureData(String signature) {
+        byte[] signatureBytes = Numeric.hexStringToByteArray(signature);
+        byte v = signatureBytes[64];
+        if (v < 27) {
+            v += 27;
+        }
+
+        Sign.SignatureData sd = new Sign.SignatureData(
+                v,
+                Arrays.copyOfRange(signatureBytes, 0, 32),
+                Arrays.copyOfRange(signatureBytes, 32, 64));
+
+        return sd;
+    }
+
+    private byte[] getMsgHash() {
+        String prefix = PERSONAL_MESSAGE_PREFIX + MESSAGE.length();
+        byte[] msgHash = Hash.sha3((prefix + MESSAGE).getBytes());
+        return msgHash;
+    }
+
+    private BigInteger getPublicKey(String signature) {
+
+        Sign.SignatureData sd = getSignatureData(signature);
+        byte[] msgHash = getMsgHash();
+
+        for (int i = 0; i < 4; i++) {
+            BigInteger publicKey = Sign.recoverFromSignature(
+                    (byte) i,
+                    new ECDSASignature(new BigInteger(1, sd.getR()), new BigInteger(1, sd.getS())),
+                    msgHash);
+
+            if (publicKey != null) {
+                return publicKey;
+            }
+        }
+        return null;
+    }
+
 }

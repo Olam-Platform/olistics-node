@@ -31,4 +31,6 @@ public interface EthereumNodeService {
     String sendDeployTx(String signedTx);
 
     void sendSubmitDocTx(String signedTx);
+
+    boolean checkWritePermission(String signature, String shipmentId);
 }

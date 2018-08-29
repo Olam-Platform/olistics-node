@@ -61,7 +61,7 @@ public class EthereumNodeServiceImplIntegrationTest {
 
     }
 
-    @Test
+//    @Test
     public void relaySignedTransaction() throws Exception {
 
         BigInteger nonce = utils.getNonce(credentials.getAddress());
@@ -85,4 +85,6 @@ public class EthereumNodeServiceImplIntegrationTest {
         System.out.println("sig data: " + signatureData.toString());
         BigInteger key = Sign.signedMessageToKey(message.getBytes(), signatureData);
     }
+
+
 }
