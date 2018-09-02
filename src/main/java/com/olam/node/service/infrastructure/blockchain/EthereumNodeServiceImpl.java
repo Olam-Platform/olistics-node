@@ -1,7 +1,10 @@
 package com.olam.node.service.infrastructure.blockchain;
 
 import com.olam.node.service.infrastructure.Transport;
-import org.web3j.crypto.*;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.ECDSASignature;
+import org.web3j.crypto.Hash;
+import org.web3j.crypto.Sign;
 import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
@@ -25,8 +28,8 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     private final int WAIT_TX_INTERVAL = 10000;     // in milliseconds
     private final int RINKEBY_AVERAGE_TX_TIME = 15000;
     private final int WAIT_TX_MAX_TRIES = 10;
-    private final String PERSONAL_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n";
-    private final String MESSAGE = "RULE THE OLAM";
+    public final String PERSONAL_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n";
+    public final String MESSAGE = "RULE THE OLAM";
 
     protected Admin ethAdmin;
 
@@ -87,19 +90,37 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
         sendTx(signedTx);
     }
 
-    @Override
-    public boolean checkWritePermission(String signature, String shipmentId){
+//    @Override
+//    public boolean checkWritePermission(String signature, String shipmentId) {
+//
+//        BigInteger publicKey = getPublicKey(signature);
+//
+//        Transport shipment = Transport.load(shipmentId, this.web3j, credentials, gasPrice, gasLimit);
+//        String role = null;
+//        try {
+//            role = shipment.getRole(publicKey.toString()).send();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return role.equals("Manager");
+//    }
 
-        BigInteger publicKey = getPublicKey(signature);
-        Transport shipment = Transport.load(shipmentId, this.web3j, credentials, gasPrice, gasLimit);
-        String role = null;
-        try {
-            role = shipment.getRole(publicKey.toString()).send();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return role.equals("Manager");
-    }
+//    @Override
+//    public boolean checkWritePermission(Sign.SignatureData signature, String shipmentId) {
+//
+//        BigInteger publicKey = Sign.recoverFromSignature(1,
+//                new ECDSASignature(new BigInteger(1, signature.getR()), new BigInteger(1, signature.getS()))
+//                , MESSAGE.getBytes());
+//
+//        Transport shipment = Transport.load(shipmentId, this.web3j, credentials, gasPrice, gasLimit);
+//        String role = null;
+//        try {
+//            role = shipment.getRole(publicKey.toString()).send();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return role.equals("Manager");
+//    }
 
 
     private Optional<TransactionReceipt> sendTx(String tx) {
