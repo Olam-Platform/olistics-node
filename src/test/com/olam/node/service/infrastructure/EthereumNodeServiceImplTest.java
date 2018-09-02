@@ -3,7 +3,9 @@ package com.olam.node.service.infrastructure;
 import com.olam.node.service.infrastructure.blockchain.EthereumNodeServiceImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.web3j.crypto.ECDSASignature;
 import org.web3j.crypto.RawTransaction;
+import org.web3j.crypto.Sign;
 import org.web3j.tuples.generated.Tuple4;
 
 import java.math.BigInteger;
@@ -22,7 +24,7 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
         try {
             OfflineEthereumServiceImplTest.setup();
 
-            nodeService = new EthereumNodeServiceImpl(properties.getProperty("rpcurl.rinkeby.eli"));
+            nodeService = new EthereumNodeServiceImpl(properties.getProperty("rpcurl.ganache"));
 
             if (nodeService.getEtherBalance(shipperCredentials.getAddress()) < 0.25) {
                 nodeService.sendEther(managerCredentials, shipperCredentials.getAddress(), 0.5f);
@@ -211,25 +213,32 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
 
 
 
-    @Test
-    public void checkWritePermission() {
-
-        try {
-            long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
-            RawTransaction deployTransaction = nodeService.buildDeployTx(
-                    managerCredentials.getAddress(), shipperCredentials.getAddress(), receiverCredentials.getAddress(), msecSinceEpoc
-            );
-
-            String signedTransaction = nodeService.signTransaction(deployTransaction, managerCredentials);
-            String contractAddress = nodeService.sendDeployTx(signedTransaction);
-
-            Transport contract = loadTransportContract(contractAddress);
-
-            verifyContractInitialState(contract);
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-    }
+//    @Test
+//    public void checkWritePermission() {
+//
+//        try {
+//            long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
+//            RawTransaction deployTransaction = nodeService.buildDeployTx(
+//                    managerCredentials.getAddress(), shipperCredentials.getAddress(), receiverCredentials.getAddress(), msecSinceEpoc
+//            );
+//
+//            String signedTransaction = nodeService.signTransaction(deployTransaction, managerCredentials);
+//            String contractAddress = nodeService.sendDeployTx(signedTransaction);
+//
+//            Transport contract = loadTransportContract(contractAddress);
+//
+//            Sign.SignatureData signatureData = Sign.signMessage(nodeService.MESSAGE.getBytes(), managerCredentials.getEcKeyPair());
+//
+////            BigInteger publicKey = Sign.recoverFromSignature(1,
+////                    new ECDSASignature(new BigInteger(1, signatureData.getR()), new BigInteger(1, signatureData.getS())),
+////                    nodeService.MESSAGE.getBytes());
+//
+//            boolean result = nodeService.checkWritePermission(signatureData, contractAddress);
+//
+//        } catch (InterruptedException | ExecutionException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 
     private static Transport deployTransportContract() {
