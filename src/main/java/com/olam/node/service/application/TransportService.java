@@ -1,23 +1,16 @@
 package com.olam.node.service.application;
 
-import com.olam.node.service.application.entities.Participant;
-import com.olam.node.service.infrastructure.blockchain.EthereumNodeService;
-import com.olam.node.service.infrastructure.storage.DataStorageService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+public interface TransportService {
 
-public class TransportService {
+    String createShipment(String deployShipmentTransaction);
 
-    @Autowired
-    private DataStorageService dataStorageService;
-    @Autowired
-    private EthereumNodeService ethereumNode;
+    String GetDocumentId(byte[] document);
 
-    public void createShipment(List<Participant> participants, String signedTransaction) {
-        //check valid participants
-        //get public key from signed transaction
-        //relay transaction to blockchain
-        //ethereumNode.sendTransaction(signedTransaction);
-    }
+    String uploadDocument(String submitDataTransaction, MultipartFile document);
+
+    Resource downloadDocument(String documentId);
+
 }
