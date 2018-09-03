@@ -2,7 +2,6 @@ package com.olam.node.service.infrastructure.blockchain;
 
 import com.olam.node.service.infrastructure.Transport;
 import org.web3j.crypto.Credentials;
-import org.web3j.crypto.Sign;
 import org.web3j.tuples.generated.Tuple2;
 
 import java.io.IOException;
@@ -32,6 +31,8 @@ public interface EthereumNodeService {
     String sendDeployTx(String signedTx);
 
     void sendSubmitDocTx(String signedTx);
+
+    String getDocumentId(String shipmentId, String documentName);
 
 //    boolean checkWritePermission(String signature, String shipmentId);
 

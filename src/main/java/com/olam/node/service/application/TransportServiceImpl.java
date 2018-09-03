@@ -18,26 +18,28 @@ public class TransportServiceImpl implements TransportService {
     @Override
     public String createShipment(String deployShipmentTransaction) {
 
-        return null;
+        return ethereumNode.sendDeployTx(deployShipmentTransaction);
     }
 
     @Override
     public String getDocumentId(byte[] document) {
+
         return dataStorageService.getdataIdentifier(document);
     }
 
     @Override
     public String uploadDocument(String submitDocumentTransaction, byte[] document) {
 
-        //todo: relay signed transaction to blockchain
-        return dataStorageService.save(document);
+        String documentHash = dataStorageService.save(document);
+        ethereumNode.sendSubmitDocTx(submitDocumentTransaction);
+        return documentHash;
 
     }
 
     @Override
     public Resource downloadDocument(String shipmentId, String documentName) {
-        String documentId = null;
-        //todo: get document hash from shipment contract
+
+        String documentId = ethereumNode.getDocumentId(shipmentId, documentName);
         return dataStorageService.loadDataAsResource(documentId);
     }
 }

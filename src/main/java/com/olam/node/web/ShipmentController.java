@@ -31,8 +31,9 @@ public class ShipmentController {
 
     @PostMapping
     public String createShipment(@RequestBody String trx) {
-
-        return transportService.createShipment(trx);
+        String address = transportService.createShipment(trx);
+        logger.info("created a shipment smart contract at address: " + address);
+        return address;
     }
 
     //endpoint for uploading Multipart documents (PDF, images, etc...)
@@ -51,7 +52,9 @@ public class ShipmentController {
 
         //check user permissions - next phase
         //send signed trx to blockchain + document to IPFS
-        return transportService.uploadDocument(submitDocumentTransaction, businessMessage.getBytes());
+        String result = transportService.uploadDocument(submitDocumentTransaction, businessMessage.getBytes());
+        logger.info("uploaded document");
+        return result;
     }
 
     //endpoint for Multipart documents (PDF, images, etc...)
@@ -59,16 +62,19 @@ public class ShipmentController {
     public String GetMultipartDocumentId(@RequestBody MultipartFile data) throws IOException {
         //check user permissions - next phase
         //get document hash
-        return transportService.getDocumentId(data.getBytes());
+        String id = transportService.getDocumentId(data.getBytes());
+        logger.debug("document id calculated: "+ id);
+        return id;
     }
 
     //endpoint for XML, JSON documents (UBL messages)
     @PostMapping(value = "/businessMessage/id", consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public String GetBusinessMessageId(@RequestBody String data) {
+    public String GetBusinessMessageId(@RequestBody String businessMessage) {
         //check user permissions - next phase
         //get document hash
-        return transportService.getDocumentId(data.getBytes());
-    }
+        String id = transportService.getDocumentId(businessMessage.getBytes());
+        logger.debug("business message id calculated: "+ id);
+        return id;    }
 
     @GetMapping(value = "/{shipmentId}/document/{documentName}")
     public ResponseEntity<Resource> downloadDocument(@PathVariable("shipmentId") String shipmentId,

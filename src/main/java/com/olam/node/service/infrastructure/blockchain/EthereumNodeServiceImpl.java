@@ -1,10 +1,8 @@
 package com.olam.node.service.infrastructure.blockchain;
 
 import com.olam.node.service.infrastructure.Transport;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.ECDSASignature;
-import org.web3j.crypto.Hash;
-import org.web3j.crypto.Sign;
+import org.springframework.util.StringUtils;
+import org.web3j.crypto.*;
 import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
@@ -13,6 +11,7 @@ import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tuples.generated.Tuple2;
+import org.web3j.tuples.generated.Tuple4;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
@@ -25,6 +24,10 @@ import java.util.List;
 import java.util.Optional;
 
 public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implements EthereumNodeService {
+
+    public static final String PRIVATE_KEY_STRING =
+            "a392604efc2fad9c0b3da43b5f698a2e3f270f170d859912be0d54742275c5f6";
+
     private final int WAIT_TX_INTERVAL = 10000;     // in milliseconds
     private final int RINKEBY_AVERAGE_TX_TIME = 15000;
     private final int WAIT_TX_MAX_TRIES = 10;
@@ -32,10 +35,12 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     public final String MESSAGE = "RULE THE OLAM";
 
     protected Admin ethAdmin;
+    private Credentials credentials;
 
     public EthereumNodeServiceImpl(String rpcUrl) {
         super(rpcUrl);
         ethAdmin = Admin.build(new HttpService(RPC_URL));
+        credentials = Credentials.create(PRIVATE_KEY_STRING);
     }
 
     @Override
@@ -88,6 +93,19 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     @Override
     public void sendSubmitDocTx(String signedTx) {
         sendTx(signedTx);
+    }
+
+    @Override
+    public String getDocumentId(String shipmentId, String documentName) {
+        String documentId = null;
+        Transport transport = loadTransportContract(credentials, shipmentId);
+        try {
+            Tuple4<String, BigInteger, String, BigInteger> documentInfo = transport.requestDocument(documentName).send();
+            documentId = documentInfo.getValue1();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return documentId;
     }
 
 //    @Override
