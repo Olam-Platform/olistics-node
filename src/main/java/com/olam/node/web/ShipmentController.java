@@ -11,7 +11,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MimeType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,7 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @RestController
-@RequestMapping("shipment")
+@RequestMapping("/v1/shipment")
 public class ShipmentController {
 
     private static final Logger logger = LoggerFactory.getLogger(ShipmentController.class);
@@ -31,42 +30,51 @@ public class ShipmentController {
 
 
     @PostMapping
-    public String createShipment(@RequestParam("deployTransaction") String trx) {
-        //check permission to create shipment
-        //check valid recipients
-        //relay transaction to blockchain
-        String address = transportService.createShipment(trx);
-        //get transaction hash and send back to user
-        return address;
+    public String createShipment(@RequestBody String trx) {
+
+        return transportService.createShipment(trx);
     }
 
-
-    @PostMapping("/document")
-    public String submitNewDocument(@RequestParam("submitDocumentTransaction") String submitDocumentTransaction,
-                                    @RequestParam("data") MultipartFile data) {
+    //endpoint for uploading Multipart documents (PDF, images, etc...)
+    @PostMapping(value = "/document", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String uploadNewMultipartDocument(@RequestParam("uploadDocumentTransaction") String submitDocumentTransaction,
+                                             @RequestParam("document") MultipartFile document) throws IOException {
 
         //check user permissions - next phase
         //send signed trx to blockchain + document to IPFS
-        return transportService.uploadDocument(submitDocumentTransaction, data);
+        return transportService.uploadDocument(submitDocumentTransaction, document.getBytes());
     }
 
+    @PostMapping(value = "/businessMessage", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public String uploadBusinessMessage(@RequestParam("uploadDocumentTransaction") String submitDocumentTransaction,
+                                        @RequestParam("businessMessage") String businessMessage) {
+
+        //check user permissions - next phase
+        //send signed trx to blockchain + document to IPFS
+        return transportService.uploadDocument(submitDocumentTransaction, businessMessage.getBytes());
+    }
+
+    //endpoint for Multipart documents (PDF, images, etc...)
     @PostMapping(value = "/document/id", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public String GetDataId(@RequestBody MultipartFile data) throws IOException {
+    public String GetMultipartDocumentId(@RequestBody MultipartFile data) throws IOException {
         //check user permissions - next phase
         //get document hash
-        return transportService.GetDocumentId(data.getBytes());
+        return transportService.getDocumentId(data.getBytes());
     }
 
-    @PostMapping(value = "/document/id", consumes = {MediaType.APPLICATION_XML_VALUE,  MediaType.APPLICATION_JSON_VALUE})
-    public String GetDataId(@RequestBody String data){
+    //endpoint for XML, JSON documents (UBL messages)
+    @PostMapping(value = "/businessMessage/id", consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public String GetBusinessMessageId(@RequestBody String data) {
         //check user permissions - next phase
         //get document hash
-        return transportService.GetDocumentId(data.getBytes());
+        return transportService.getDocumentId(data.getBytes());
     }
 
-    @GetMapping("/document/{hash}")
-    public ResponseEntity<Resource> downloadDocument(@PathVariable("documentId") String documentId) {
-        Resource resource = transportService.downloadDocument(documentId);
+    @GetMapping(value = "/{shipmentId}/document/{documentName}")
+    public ResponseEntity<Resource> downloadDocument(@PathVariable("shipmentId") String shipmentId,
+                                                     @PathVariable("documentName") String documentName) {
+
+        Resource resource = transportService.downloadDocument(shipmentId, documentName);
         String contentType = null;
         try {
             contentType = this.detectDocumentType(resource.getInputStream());
@@ -83,6 +91,12 @@ public class ShipmentController {
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
+    }
+
+    @GetMapping(value = "/{shipmentId}/businessMessage/{messageName}")
+    public ResponseEntity<Resource> downloadBusinessMessage(@PathVariable("shipmentId") String shipmentId,
+                                                            @PathVariable("messageName") String messageName) {
+        return null;
     }
 
     private String detectDocumentType(InputStream stream) throws IOException {

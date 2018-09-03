@@ -5,7 +5,6 @@ import com.olam.node.service.infrastructure.storage.DataStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class TransportServiceImpl implements TransportService {
@@ -18,21 +17,27 @@ public class TransportServiceImpl implements TransportService {
 
     @Override
     public String createShipment(String deployShipmentTransaction) {
+
         return null;
     }
 
     @Override
-    public String GetDocumentId(byte[] document) {
+    public String getDocumentId(byte[] document) {
         return dataStorageService.getdataIdentifier(document);
     }
 
     @Override
-    public String uploadDocument(String submitDataTransaction, MultipartFile document) {
-        return null;
+    public String uploadDocument(String submitDocumentTransaction, byte[] document) {
+
+        //todo: relay signed transaction to blockchain
+        return dataStorageService.save(document);
+
     }
 
     @Override
-    public Resource downloadDocument(String documentId) {
-        return null;
+    public Resource downloadDocument(String shipmentId, String documentName) {
+        String documentId = null;
+        //todo: get document hash from shipment contract
+        return dataStorageService.loadDataAsResource(documentId);
     }
 }

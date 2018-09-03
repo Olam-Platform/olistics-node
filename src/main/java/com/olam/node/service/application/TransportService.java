@@ -7,10 +7,10 @@ public interface TransportService {
 
     String createShipment(String deployShipmentTransaction);
 
-    String GetDocumentId(byte[] document);
+    String getDocumentId(byte[] document);
 
-    String uploadDocument(String submitDataTransaction, MultipartFile document);
+    String uploadDocument(String submitDocumentTransaction, byte[] document);
 
-    Resource downloadDocument(String documentId);
+    Resource downloadDocument(String shipmentId, String documentName);
 
 }
