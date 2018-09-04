@@ -3,6 +3,7 @@ package com.olam.node.service.infrastructure;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
+import org.web3j.protocol.core.methods.request.Transaction;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,10 +24,6 @@ public interface OfflineEthereumService {
     RawTransaction buildSubmitDocTx(
             String fromAddress, String contractAddress, String docName, String docUrl, List<String> recipients, List<byte[]> keyList, long timeStamp
     ) throws ExecutionException, InterruptedException;
-
-    RawTransaction buildRequestDocTx(String fromAddress, String contractAddress, String docName) throws ExecutionException, InterruptedException;
-
-    RawTransaction buildRequestDocTx(String fromAddress, String contractAddress, String docName, int docVersion) throws ExecutionException, InterruptedException;
 
     String signTransaction(RawTransaction transaction, Credentials credentials);
 }

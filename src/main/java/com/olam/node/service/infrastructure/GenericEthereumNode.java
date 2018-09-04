@@ -9,8 +9,8 @@ import java.math.BigInteger;
 public class GenericEthereumNode {
     protected Web3j web3j;
 
-    BigInteger gasPrice = BigInteger.valueOf(220000000L);
-    BigInteger gasLimit = BigInteger.valueOf(4300000);
+    BigInteger gasPrice = BigInteger.valueOf(20000000000L);
+    BigInteger gasLimit = BigInteger.valueOf(6721975);
 
     final String RPC_URL;
 
