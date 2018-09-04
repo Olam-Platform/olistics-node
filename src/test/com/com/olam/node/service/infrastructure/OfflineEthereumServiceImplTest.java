@@ -7,7 +7,6 @@ import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.WalletUtils;
-import org.web3j.protocol.core.methods.request.Transaction;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -38,7 +37,7 @@ public class OfflineEthereumServiceImplTest {
         try {
             properties.load(new FileReader(ResourceUtils.getFile("classpath:application.properties")));
 
-            nodeService = new OfflineEthereumServiceImpl(properties.getProperty("rpcurl.rinkeby.eli"));
+            nodeService = new OfflineEthereumServiceImpl(properties.getProperty(RPC_URL));
 
             if (RPC_URL.equals("rpcurl.rinkeby.eli")) {
                 loadTestnetCredentials();
