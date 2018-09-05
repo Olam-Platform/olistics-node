@@ -2,7 +2,7 @@
 //
 //
 //import com.olam.node.service.infrastructure.blockchain.EthereumNodeServiceImpl;
-//import com.olam.node.utils.Web3jUtils;
+//import olam.node.Web3jUtils;
 //import org.junit.Before;
 //import org.junit.Test;
 //import org.junit.runner.RunWith;

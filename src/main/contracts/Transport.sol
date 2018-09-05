@@ -8,23 +8,23 @@ contract Transport {
         uint timeStamp;
         address[] recipients;
         mapping(address => bytes32) keys;
-    }
+    };
 
     // constants
-    string constant MANAGER_ROLE = "manager";
-    string constant SHIPPER_ROLE = "shipper";
-    string constant RECEIVER_ROLE = "receiver";
+    internal string constant MANAGER_ROLE = "manager";
+    internal string constant SHIPPER_ROLE = "shipper";
+    internal string constant RECEIVER_ROLE = "receiver";
 
-    uint startTime;                             // start time of this contract
-    string currentState;                        // current transport state
+    internal uint startTime;                             // start time of this contract
+    internal string currentState;                        // current transport state
 
-    mapping(string => Document[])   documents;                      // all submitted documents for this transport
-    mapping(string => bool)         documentsExist;                 // helper mapping
-    mapping(string => address)      roles;                          // all transport roles
-    address[]                       addresses;
+    internal mapping(string => Document[])   documents;                      // all submitted documents for this transport
+    internal mapping(string => bool)         documentsExist;                 // helper mapping
+    internal mapping(string => address)      roles;                          // all transport roles
+    internal address[]                       addresses;
 
 
-    mapping(address => string[])    directory;                      //
+    internal mapping(address => string[])    directory;                      //
 
     // events
     event TransportStarted(uint timeStamp, address indexed recipient);
@@ -88,7 +88,7 @@ contract Transport {
     }
 
     // request a document locator
-    function requestDocument(string name) view public returns (string, uint, address, uint/*, bytes32*/) {
+    function requestDocument(string name) public view returns (string, uint, address, uint/*, bytes32*/) {
         require(isKnownRole(msg.sender), "role is not part of this transport");
         require(documentsExist[name], "unknown document requested");
 
@@ -99,7 +99,7 @@ contract Transport {
 
     // request a versioned document locator
     function requestDocument(
-        string name, uint version) view public returns (string, uint, address, uint/*, bytes32*/
+        string name, uint version) public view returns (string, uint, address, uint/*, bytes32*/
     ) {
         require(isKnownRole(msg.sender), "role is not part of this transport");
         require(documentsExist[name], "unknown document requested");
@@ -140,17 +140,17 @@ contract Transport {
         directory[roleAddress].push(role);
     }
 
-    function getRole(address roleAddress) view public returns (string) {
+    function getRole(address roleAddress) public view returns (string) {
         require(isKnownRole(msg.sender), "role is not part of this transport");
 
         return directory[roleAddress][0];
     }
 
-    function getAddress(string role) view public returns (address) {
+    function getAddress(string role) public view returns (address) {
         return roles[role];
     }
 
-    function isKnownRole(address roleAddress) view private returns (bool) {
+    function isKnownRole(address roleAddress) private view returns (bool) {
         bool result = false;
 
         for (uint i = 0; i < directory[roleAddress].length; i++) {

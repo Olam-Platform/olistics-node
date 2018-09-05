@@ -1,14 +1,21 @@
 package com.olam.node.service.infrastructure.blockchain;
 
-import com.olam.node.service.infrastructure.Transport;
-import org.springframework.util.StringUtils;
-import org.web3j.crypto.*;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.ECDSASignature;
+import org.web3j.crypto.Hash;
+import org.web3j.crypto.Sign;
 import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.response.EthGetBalance;
-import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tuples.generated.Tuple2;
 import org.web3j.tuples.generated.Tuple4;
@@ -24,10 +31,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implements EthereumNodeService {
-
-    public static final String PRIVATE_KEY_STRING =
-            "a392604efc2fad9c0b3da43b5f698a2e3f270f170d859912be0d54742275c5f6";
-
     private final int WAIT_TX_INTERVAL = 10000;     // in milliseconds
     private final int RINKEBY_AVERAGE_TX_TIME = 15000;
     private final int WAIT_TX_MAX_TRIES = 10;
@@ -35,16 +38,16 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     public final String MESSAGE = "RULE THE OLAM";
 
     protected Admin ethAdmin;
-    private Credentials credentials;
 
     public EthereumNodeServiceImpl(String rpcUrl) {
         super(rpcUrl);
         ethAdmin = Admin.build(new HttpService(RPC_URL));
-        credentials = Credentials.create(PRIVATE_KEY_STRING);
     }
 
     @Override
-    public Transport deployTransportContract(Credentials credentials, String shipperAddress, String receiverAddress, long msecSinceEpoc) throws Exception {
+    public Transport deployTransportContract(
+            Credentials credentials, String shipperAddress, String receiverAddress, long msecSinceEpoc
+    ) throws Exception {
         return Transport.deploy(web3j, credentials, gasPrice, gasLimit, shipperAddress, receiverAddress, BigInteger.valueOf(msecSinceEpoc)).send();
     }
 
@@ -87,7 +90,7 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
 
     @Override
     public String sendDeployTx(String signedTx) {
-        return sendTx(signedTx).get().getContractAddress();
+        return sendTx(signedTx).getContractAddress();
     }
 
     @Override
@@ -96,16 +99,29 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     }
 
     @Override
-    public String getDocumentId(String shipmentId, String documentName) {
-        String documentId = null;
-        Transport transport = loadTransportContract(credentials, shipmentId);
-        try {
-            Tuple4<String, BigInteger, String, BigInteger> documentInfo = transport.requestDocument(documentName).send();
-            documentId = documentInfo.getValue1();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return documentId;
+    public Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(
+            String fromAddress, String contractAddress, String docName
+    ) throws IOException {
+        final Function function = new Function(
+                Transport.FUNC_REQUESTDOCUMENT,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(docName)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {})
+        );
+
+        String encodedFunction = FunctionEncoder.encode(function);
+        Transaction tx = Transaction.createEthCallTransaction(fromAddress, contractAddress, encodedFunction);
+
+        EthCall ethCall = web3j.ethCall(tx, DefaultBlockParameterName.LATEST).send();
+
+        List<Type> callResults = FunctionReturnDecoder.decode(ethCall.getValue(), function.getOutputParameters());
+
+        assert(callResults.size() == 4);
+        return new Tuple4<>(
+                (String) callResults.get(0).getValue(),
+                (BigInteger) callResults.get(1).getValue(),
+                (String) callResults.get(2).getValue(),
+                (BigInteger) callResults.get(3).getValue()
+        );
     }
 
 //    @Override
@@ -140,8 +156,34 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
 //        return role.equals("Manager");
 //    }
 
+    @Override
+    public Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(String fromAddress, String contractAddress, String docName, int docVersion) throws IOException {
+        Function function = new Function(
+                Transport.FUNC_REQUESTDOCUMENT,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(docName), new org.web3j.abi.datatypes.generated.Uint256(docVersion)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {})
+        );
 
-    private Optional<TransactionReceipt> sendTx(String tx) {
+        String encodedFunction = FunctionEncoder.encode(function);
+        Transaction tx = Transaction.createEthCallTransaction(fromAddress, contractAddress, encodedFunction);
+
+        EthCall ethCall = web3j.ethCall(tx, DefaultBlockParameterName.LATEST).send();
+
+        List<Type> callResults = FunctionReturnDecoder.decode(ethCall.getValue(), function.getOutputParameters());
+        return new Tuple4<>(
+                (String) callResults.get(0).getValue(),
+                (BigInteger) callResults.get(1).getValue(),
+                (String) callResults.get(2).getValue(),
+                (BigInteger) callResults.get(3).getValue()
+        );
+    }
+
+    @Override
+    public String getDocumentId(String shipmentId, String documentName) {
+        return null;
+    }
+
+    private TransactionReceipt sendTx(String tx) {
         Optional<TransactionReceipt> result = null;
         EthGetTransactionReceipt receipt;
 
@@ -162,7 +204,7 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
                     }
                 }
 
-                if (result == null) {
+                if(result == null) {
                     Thread.sleep(WAIT_TX_INTERVAL);
                 }
 
@@ -172,7 +214,7 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
             e.printStackTrace();
         }
 
-        return result;
+        return result.get();
     }
 
     /*******PRIVATE UTILITY METHODS *****************/

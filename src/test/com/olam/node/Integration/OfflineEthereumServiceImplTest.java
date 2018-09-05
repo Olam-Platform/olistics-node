@@ -1,6 +1,7 @@
-package com.olam.node.service.infrastructure;
+package olam.node.Integration;
 
 import com.olam.node.service.infrastructure.blockchain.OfflineEthereumServiceImpl;
+import com.olam.node.service.infrastructure.blockchain.Transport;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.util.ResourceUtils;
@@ -20,12 +21,16 @@ import static org.junit.Assert.assertNotNull;
 
 public class OfflineEthereumServiceImplTest {
     static private OfflineEthereumServiceImpl nodeService = null;
+    static protected String RPC_URL = "rpcurl.ganache";
+
     static Properties properties = new Properties();
 
     private static List<Credentials> credentials = new ArrayList<>();
     static Credentials managerCredentials;
     static Credentials shipperCredentials;
     static Credentials receiverCredentials;
+
+    protected Transport lastDeployedContract = null;
 
     //Logger logger = getLogger(getClass().getName());
 
@@ -34,9 +39,13 @@ public class OfflineEthereumServiceImplTest {
         try {
             properties.load(new FileReader(ResourceUtils.getFile("classpath:application.properties")));
 
-            nodeService = new OfflineEthereumServiceImpl(properties.getProperty("rpcurl.rinkeby.eli"));
+            nodeService = new OfflineEthereumServiceImpl(properties.getProperty(RPC_URL));
 
-            loadCredentials();
+            if (RPC_URL.equals("rpcurl.rinkeby.eli")) {
+                loadTestnetCredentials();
+            } else if (RPC_URL.equals("rpcurl.ganache")) {
+                loadGanacheCredentials();
+            }
 
             managerCredentials = credentials.get(Integer.parseInt(properties.getProperty("account_id.manager")));
             shipperCredentials = credentials.get(Integer.parseInt(properties.getProperty("account_id.shipper")));
@@ -64,18 +73,11 @@ public class OfflineEthereumServiceImplTest {
         keys.add(key1);
         keys.add(key2);
 
-        RawTransaction tx = buildSubmitDocTx(managerCredentials.getAddress(), "", "docName", "docUrl", recipientsAddresses, keys);
+        RawTransaction tx = buildSubmitDocTx(
+                managerCredentials.getAddress(), "", "docName", "docUrl", recipientsAddresses, keys
+        );
 
         assertNotNull(tx);
-    }
-
-    @Test
-    public void testBuildRequestDocTx() {
-        RawTransaction tx1 = buildRequestDocTx(managerCredentials.getAddress(), "", "docName");
-        assertNotNull(tx1);
-
-        RawTransaction tx2 = buildRequestDocTx(managerCredentials.getAddress(), "", "docName", 0);
-        assertNotNull(tx2);
     }
 
     @Test
@@ -92,24 +94,32 @@ public class OfflineEthereumServiceImplTest {
         assertFalse(signedTransaction.isEmpty());
     }
 
-    private static void loadCredentials() {
+    //region helpers
+    private static void loadTestnetCredentials() {
         try {
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:accounts/keystore_file01.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:accounts/keystore_file02.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:accounts/keystore_file03.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:accounts/keystore_file04.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:accounts/keystore_file05.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:accounts/keystore_file06.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:accounts/keystore_file07.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:accounts/keystore_file08.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:accounts/keystore_file09.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:accounts/keystore_file10.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file01.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file02.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file03.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file04.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file05.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file06.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file07.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file08.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file09.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file10.json")));
         } catch (CipherException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    protected RawTransaction buildDeployTx(String fromAddress, String shipperAddress, String receiverAddress) {
+    private static void loadGanacheCredentials() {
+        credentials.add(Credentials.create(properties.getProperty("ganache.privatekey01")));
+        credentials.add(Credentials.create(properties.getProperty("ganache.privatekey02")));
+        credentials.add(Credentials.create(properties.getProperty("ganache.privatekey03")));
+        credentials.add(Credentials.create(properties.getProperty("ganache.privatekey04")));
+        credentials.add(Credentials.create(properties.getProperty("ganache.privatekey05")));
+    }
+    private RawTransaction buildDeployTx(String fromAddress, String shipperAddress, String receiverAddress) {
         RawTransaction rawTransaction = null;
 
         try {
@@ -124,7 +134,7 @@ public class OfflineEthereumServiceImplTest {
         return rawTransaction;
     }
 
-    protected RawTransaction buildSubmitDocTx(String fromAddress, String contractAddress, String docName, String docUrl, List<String> recipients, List<byte[]> keys) {
+    private RawTransaction buildSubmitDocTx(String fromAddress, String contractAddress, String docName, String docUrl, List<String> recipients, List<byte[]> keys) {
         RawTransaction tx = null;
 
         try {
@@ -136,34 +146,8 @@ public class OfflineEthereumServiceImplTest {
         }
 
         assertNotNull(tx);
+
         return tx;
     }
-
-    private RawTransaction buildRequestDocTx(String fromAddress, String contractAddress, String docName) {
-        RawTransaction tx = null;
-
-        try {
-            tx = nodeService.buildRequestDocTx(fromAddress, contractAddress, docName);
-
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-
-        assertNotNull(tx);
-        return tx;
-    }
-
-    private RawTransaction buildRequestDocTx(String fromAddress, String contractAddress, String docName, int docVersion) {
-        RawTransaction tx = null;
-
-        try {
-            tx = nodeService.buildRequestDocTx(fromAddress, contractAddress, docName, docVersion);
-
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-
-        assertNotNull(tx);
-        return tx;
-    }
+    //endregion
 }

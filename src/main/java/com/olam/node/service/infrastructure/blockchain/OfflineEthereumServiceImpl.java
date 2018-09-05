@@ -1,16 +1,9 @@
 package com.olam.node.service.infrastructure.blockchain;
 
-import com.olam.node.service.infrastructure.Transport;
-import com.olam.node.service.infrastructure.blockchain.GenericEthereumNode;
-import com.olam.node.service.infrastructure.blockchain.OfflineEthereumService;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
-import org.web3j.abi.datatypes.Utf8String;
-import org.web3j.abi.datatypes.generated.Bytes32;
-import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.*;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.utils.Numeric;
@@ -65,62 +58,23 @@ public class OfflineEthereumServiceImpl extends GenericEthereumNode implements O
 
         final Function function = new Function(
                 Transport.FUNC_SUBMITDOCUMENT,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(docName),
+                Arrays.<Type>asList(
+                        new org.web3j.abi.datatypes.Utf8String(docName),
                         new org.web3j.abi.datatypes.Utf8String(docUrl),
                         new org.web3j.abi.datatypes.generated.Uint256(timeStamp),
                         new org.web3j.abi.datatypes.DynamicArray<org.web3j.abi.datatypes.Address>(
-                                org.web3j.abi.Utils.typeMap(recipients, org.web3j.abi.datatypes.Address.class)),
+                                org.web3j.abi.Utils.typeMap(recipients, org.web3j.abi.datatypes.Address.class)
+                        ),
                         new org.web3j.abi.datatypes.DynamicArray<org.web3j.abi.datatypes.generated.Bytes32>(
-                                org.web3j.abi.Utils.typeMap(keyList, org.web3j.abi.datatypes.generated.Bytes32.class))),
-                Collections.<TypeReference<?>>emptyList());
-
-        String encodedFunction = FunctionEncoder.encode(function);
-
-        return RawTransaction.createContractTransaction(nonce, gasPrice, gasLimit, BigInteger.ZERO, encodedFunction);
-    }
-
-    @Override
-    public RawTransaction buildRequestDocTx(String fromAddress, String contractAddress, String docName) throws ExecutionException, InterruptedException {
-        BigInteger nonce = web3j.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).sendAsync().get().getTransactionCount();
-
-        final Function function = new Function(
-                Transport.FUNC_REQUESTDOCUMENT,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(docName)),
-                Arrays.<TypeReference<?>>asList(
-                        new TypeReference<Utf8String>() {},
-                        new TypeReference<Uint256>() {},
-                        new TypeReference<Address>() {},
-                        new TypeReference<Uint256>() {},
-                        new TypeReference<Bytes32>() {}
-                )
+                                org.web3j.abi.Utils.typeMap(keyList, org.web3j.abi.datatypes.generated.Bytes32.class)
+                        )
+                ),
+                Collections.<TypeReference<?>>emptyList()
         );
 
         String encodedFunction = FunctionEncoder.encode(function);
 
-        return RawTransaction.createTransaction(nonce, gasPrice, gasLimit, contractAddress, encodedFunction);
-    }
-
-    @Override
-    public RawTransaction buildRequestDocTx(String fromAddress, String contractAddress, String docName, int docVersion) throws ExecutionException, InterruptedException {
-        BigInteger nonce = web3j.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).sendAsync().get().getTransactionCount();
-
-        final Function function = new Function(
-                Transport.FUNC_REQUESTDOCUMENT,
-                Arrays.<Type>asList(
-                        new org.web3j.abi.datatypes.Utf8String(docName),
-                        new org.web3j.abi.datatypes.generated.Uint256(docVersion)),
-                Arrays.<TypeReference<?>>asList(
-                        new TypeReference<Utf8String>() {},
-                        new TypeReference<Uint256>() {},
-                        new TypeReference<Address>() {},
-                        new TypeReference<Uint256>() {},
-                        new TypeReference<Bytes32>() {}
-                )
-        );
-
-        String encodedFunction = FunctionEncoder.encode(function);
-
-        return RawTransaction.createTransaction(nonce, gasPrice, gasLimit, contractAddress, encodedFunction);
+        return RawTransaction.createTransaction(nonce, gasPrice, gasLimit, contractAddress, BigInteger.ZERO, encodedFunction);
     }
 
     @Override
