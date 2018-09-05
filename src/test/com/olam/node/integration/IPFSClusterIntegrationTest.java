@@ -1,4 +1,4 @@
-package com.olam.node.Integration;
+package com.olam.node.integration;
 
 import com.olam.node.sdk.IPFSCluster;
 import org.junit.Before;

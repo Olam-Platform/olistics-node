@@ -7,10 +7,13 @@ import org.web3j.tuples.generated.Tuple4;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Observer;
+import java.util.concurrent.ExecutionException;
 
 public interface EthereumNodeService {
-
     String createAccount(String password) throws IOException;
+
+    BigInteger getNonce(String fromAddress) throws ExecutionException, InterruptedException;
 
     // deploy a Transport contract
     Transport deployTransportContract(Credentials credentials, String shipperAddress, String receiverAddress, long msecSinceEpoc) throws Exception;
@@ -40,10 +43,15 @@ public interface EthereumNodeService {
     Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(
             String fromAddress, String contractAddress, String docName, int docVersion
     ) throws IOException;
+
     String getDocumentId(String shipmentId, String documentName);
 
-//    boolean checkWritePermission(String signature, String shipmentId);
+    void registerForShipmentEvent(Observer observer);
 
-//    boolean checkWritePermission(Sign.SignatureData signature, String shipmentId);
+    void registerForDocumentEvent(Observer observer);
+
+    //boolean checkWritePermission(String signature, String shipmentId);
+
+    //boolean checkWritePermission(Sign.SignatureData signature, String shipmentId);
 }
 

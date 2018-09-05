@@ -12,6 +12,7 @@ import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECDSASignature;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
+import org.web3j.protocol.Web3j;
 import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
@@ -28,20 +29,26 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Observer;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
-public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implements EthereumNodeService {
+public class EthereumNodeServiceImpl extends OfflineEthereumService implements EthereumNodeService {
     private final int WAIT_TX_INTERVAL = 10000;     // in milliseconds
     private final int RINKEBY_AVERAGE_TX_TIME = 15000;
     private final int WAIT_TX_MAX_TRIES = 10;
     public final String PERSONAL_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n";
     public final String MESSAGE = "RULE THE OLAM";
 
-    protected Admin ethAdmin;
+    protected final static BigInteger gasPrice = BigInteger.valueOf(20000000000L);
+    protected final static BigInteger gasLimit = BigInteger.valueOf(6721975);
+
+    private final Web3j web3j;
+    private final Admin ethAdmin;
 
     public EthereumNodeServiceImpl(String rpcUrl) {
-        super(rpcUrl);
-        ethAdmin = Admin.build(new HttpService(RPC_URL));
+        web3j = Web3j.build(new HttpService(rpcUrl));
+        ethAdmin = Admin.build(new HttpService(rpcUrl));
     }
 
     @Override
@@ -74,6 +81,11 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     @Override
     public String createAccount(String password) throws IOException {
         return ethAdmin.personalNewAccount(password).send().getAccountId();
+    }
+
+    @Override
+    public BigInteger getNonce(String fromAddress) throws ExecutionException, InterruptedException {
+        return web3j.ethGetTransactionCount(fromAddress, DefaultBlockParameterName.LATEST).sendAsync().get().getTransactionCount();
     }
 
     @Override
@@ -124,37 +136,41 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
         );
     }
 
-//    @Override
-//    public boolean checkWritePermission(String signature, String shipmentId) {
-//
-//        BigInteger publicKey = getPublicKey(signature);
-//
-//        Transport shipment = Transport.load(shipmentId, this.web3j, credentials, gasPrice, gasLimit);
-//        String role = null;
-//        try {
-//            role = shipment.getRole(publicKey.toString()).send();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return role.equals("Manager");
-//    }
+    // region commented
+    /*
+    @Override
+    public boolean checkWritePermission(String signature, String shipmentId) {
 
-//    @Override
-//    public boolean checkWritePermission(Sign.SignatureData signature, String shipmentId) {
-//
-//        BigInteger publicKey = Sign.recoverFromSignature(1,
-//                new ECDSASignature(new BigInteger(1, signature.getR()), new BigInteger(1, signature.getS()))
-//                , MESSAGE.getBytes());
-//
-//        Transport shipment = Transport.load(shipmentId, this.web3j, credentials, gasPrice, gasLimit);
-//        String role = null;
-//        try {
-//            role = shipment.getRole(publicKey.toString()).send();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return role.equals("Manager");
-//    }
+        BigInteger publicKey = getPublicKey(signature);
+
+        Transport shipment = Transport.load(shipmentId, this.web3j, credentials, gasPrice, gasLimit);
+        String role = null;
+        try {
+            role = shipment.getRole(publicKey.toString()).send();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return role.equals("Manager");
+    }
+
+    @Override
+    public boolean checkWritePermission(Sign.SignatureData signature, String shipmentId) {
+
+        BigInteger publicKey = Sign.recoverFromSignature(1,
+                new ECDSASignature(new BigInteger(1, signature.getR()), new BigInteger(1, signature.getS()))
+                , MESSAGE.getBytes());
+
+        Transport shipment = Transport.load(shipmentId, this.web3j, credentials, gasPrice, gasLimit);
+        String role = null;
+        try {
+            role = shipment.getRole(publicKey.toString()).send();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return role.equals("Manager");
+    }
+    */
+    // endregion
 
     @Override
     public Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(String fromAddress, String contractAddress, String docName, int docVersion) throws IOException {
@@ -181,6 +197,15 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     @Override
     public String getDocumentId(String shipmentId, String documentName) {
         return null;
+    }
+
+    @Override
+    public void registerForShipmentEvent(Observer observer) {
+    }
+
+    @Override
+    public void registerForDocumentEvent(Observer observer) {
+
     }
 
     private TransactionReceipt sendTx(String tx) {
@@ -217,8 +242,7 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
         return result.get();
     }
 
-    /*******PRIVATE UTILITY METHODS *****************/
-
+    // region utility methods
     private Sign.SignatureData getSignatureData(String signature) {
         byte[] signatureBytes = Numeric.hexStringToByteArray(signature);
         byte v = signatureBytes[64];
@@ -257,5 +281,5 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
         }
         return null;
     }
-
+    // endregion
 }

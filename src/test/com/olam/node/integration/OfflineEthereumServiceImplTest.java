@@ -1,6 +1,6 @@
-package olam.node.Integration;
+package com.olam.node.integration;
 
-import com.olam.node.service.infrastructure.blockchain.OfflineEthereumServiceImpl;
+import com.olam.node.service.infrastructure.blockchain.OfflineEthereumService;
 import com.olam.node.service.infrastructure.blockchain.Transport;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -12,6 +12,7 @@ import org.web3j.crypto.WalletUtils;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -20,7 +21,11 @@ import static org.junit.Assert.assertNotNull;
 
 
 public class OfflineEthereumServiceImplTest {
-    static private OfflineEthereumServiceImpl nodeService = null;
+    BigInteger nonce = BigInteger.ZERO;
+    BigInteger gasPrice = BigInteger.valueOf(20000000000L);
+    BigInteger gasLimit = BigInteger.valueOf(6721975);
+
+    static private OfflineEthereumService nodeService = null;
     static protected String RPC_URL = "rpcurl.ganache";
 
     static Properties properties = new Properties();
@@ -39,7 +44,7 @@ public class OfflineEthereumServiceImplTest {
         try {
             properties.load(new FileReader(ResourceUtils.getFile("classpath:application.properties")));
 
-            nodeService = new OfflineEthereumServiceImpl(properties.getProperty(RPC_URL));
+            nodeService = new OfflineEthereumService();
 
             if (RPC_URL.equals("rpcurl.rinkeby.eli")) {
                 loadTestnetCredentials();
@@ -57,7 +62,9 @@ public class OfflineEthereumServiceImplTest {
 
     @Test
     public void testBuildDeployTx() {
-        RawTransaction deployTx = buildDeployTx(managerCredentials.getAddress(), shipperCredentials.getAddress(), receiverCredentials.getAddress());
+        RawTransaction deployTx = buildDeployTx(
+                managerCredentials.getAddress(), shipperCredentials.getAddress(), receiverCredentials.getAddress(), nonce, gasPrice, gasLimit
+        );
 
         assertNotNull(deployTx);
     }
@@ -74,7 +81,8 @@ public class OfflineEthereumServiceImplTest {
         keys.add(key2);
 
         RawTransaction tx = buildSubmitDocTx(
-                managerCredentials.getAddress(), "", "docName", "docUrl", recipientsAddresses, keys
+                managerCredentials.getAddress(), "", "docName", "docUrl", recipientsAddresses, keys,
+                nonce, gasPrice, gasLimit
         );
 
         assertNotNull(tx);
@@ -83,7 +91,7 @@ public class OfflineEthereumServiceImplTest {
     @Test
     public void testSignTx() {
         RawTransaction deployTransaction = buildDeployTx(
-                managerCredentials.getAddress(), shipperCredentials.getAddress(), receiverCredentials.getAddress()
+                managerCredentials.getAddress(), shipperCredentials.getAddress(), receiverCredentials.getAddress(), nonce, gasPrice, gasLimit
         );
 
         assert(deployTransaction != null);
@@ -97,16 +105,26 @@ public class OfflineEthereumServiceImplTest {
     //region helpers
     private static void loadTestnetCredentials() {
         try {
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file01.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file02.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file03.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file04.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file05.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file06.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file07.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file08.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file09.json")));
-            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file10.json")));
+            credentials.add(
+                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file01.json")));
+            credentials.add(
+                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file02.json")));
+            credentials.add(
+                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file03.json")));
+            credentials.add(
+                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file04.json")));
+            credentials.add(
+                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file05.json")));
+            credentials.add(
+                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file06.json")));
+            credentials.add(
+                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file07.json")));
+            credentials.add(
+                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file08.json")));
+            credentials.add(
+                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file09.json")));
+            credentials.add(
+                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file10.json")));
         } catch (CipherException | IOException e) {
             e.printStackTrace();
         }
@@ -119,12 +137,15 @@ public class OfflineEthereumServiceImplTest {
         credentials.add(Credentials.create(properties.getProperty("ganache.privatekey04")));
         credentials.add(Credentials.create(properties.getProperty("ganache.privatekey05")));
     }
-    private RawTransaction buildDeployTx(String fromAddress, String shipperAddress, String receiverAddress) {
+    private RawTransaction buildDeployTx(
+            String fromAddress, String shipperAddress, String receiverAddress, BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit
+    )
+    {
         RawTransaction rawTransaction = null;
 
         try {
             long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
-            rawTransaction = nodeService.buildDeployTx(fromAddress, shipperAddress, receiverAddress , msecSinceEpoc);
+            rawTransaction = nodeService.buildDeployTx(shipperAddress, receiverAddress , msecSinceEpoc, nonce, gasPrice, gasLimit);
 
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -134,12 +155,16 @@ public class OfflineEthereumServiceImplTest {
         return rawTransaction;
     }
 
-    private RawTransaction buildSubmitDocTx(String fromAddress, String contractAddress, String docName, String docUrl, List<String> recipients, List<byte[]> keys) {
+    private RawTransaction buildSubmitDocTx(
+            String fromAddress, String contractAddress, String docName, String docUrl, List<String> recipients, List<byte[]> keys,
+            BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit
+    ) {
         RawTransaction tx = null;
 
         try {
             long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
-            tx = nodeService.buildSubmitDocTx(fromAddress, contractAddress, docName , docUrl, recipients, keys, msecSinceEpoc);
+            tx = nodeService.buildSubmitDocTx(
+                    fromAddress, contractAddress, docName , docUrl, recipients, keys, msecSinceEpoc, nonce, gasPrice, gasLimit);
 
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
