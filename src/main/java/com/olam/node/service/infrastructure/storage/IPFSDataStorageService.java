@@ -1,7 +1,5 @@
 package com.olam.node.service.infrastructure.storage;
 
-import com.olam.node.sdk.IPFSCluster;
-
 import io.ipfs.api.IPFS;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
@@ -19,8 +17,8 @@ public class IPFSDataStorageService implements DataStorageService {
     @Autowired
     private IPFS ipfs;
 
-    @Autowired
-    private IPFSCluster cluster;
+//    @Autowired
+//    private IPFSCluster cluster;
 
     @Override
     public String getdataIdentifier(byte[] data) {
@@ -38,7 +36,9 @@ public class IPFSDataStorageService implements DataStorageService {
 
         try {
             NamedStreamable.ByteArrayWrapper streamable = new NamedStreamable.ByteArrayWrapper(data);
-            MerkleNode node = ipfs.add(streamable, false, hashOnly).get(0);
+            MerkleNode addResult = ipfs.add(streamable, false, hashOnly).get(0);
+            hash = addResult.hash.toString();
+            //add support in ipfs cluster
 //            cluster.pins.add(hash);
         } catch (IOException e) {
             e.printStackTrace();

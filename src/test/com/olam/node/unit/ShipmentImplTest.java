@@ -1,5 +1,6 @@
-package com.olam.node.sdk;
+package com.olam.node.unit;
 
+import com.olam.node.sdk.ShipmentImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.util.ResourceUtils;

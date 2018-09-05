@@ -1,7 +1,6 @@
 package com.olam.node.web;
 
-import com.olam.node.service.infrastructure.storage.DataStorageService;
-import com.olam.node.service.infrastructure.blockchain.EthereumNodeService;
+import com.olam.node.service.application.TransportService;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.metadata.Metadata;
@@ -15,61 +14,73 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 
 @RestController
-@RequestMapping("shipment")
+@RequestMapping("/v1/shipment")
 public class ShipmentController {
 
     private static final Logger logger = LoggerFactory.getLogger(ShipmentController.class);
 
     @Autowired
-    private DataStorageService dataStorageService;
-    @Autowired
-    private EthereumNodeService ethereumService;
+    private TransportService transportService;
 
     private Detector detector = new DefaultDetector();
 
 
-//    @PostMapping
-//    public String createShipment(@RequestParam("participants") String participants, @RequestParam("deployTransaction") String trx){
-//        //check permission to create shipment
-//        //check valid recipients
-//
-//        //relay transaction to blockchain
-//        //get transaction hash and send back to user
-//        return "fix";
-//    }
-
     @PostMapping
-    public String createShipment(@RequestParam("deployTransaction") String trx){
-        //check permission to create shipment
-        //check valid recipients
-
-        //relay transaction to blockchain
-        String address = ethereumService.sendDeployTx(trx);
-        //get transaction hash and send back to user
-
+    public String createShipment(@RequestBody String trx) {
+        String address = transportService.createShipment(trx);
+        logger.info("created a shipment smart contract at address: " + address);
         return address;
     }
 
+    //endpoint for uploading Multipart documents (PDF, images, etc...)
+    @PostMapping(value = "/document", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String uploadNewMultipartDocument(@RequestParam("uploadDocumentTransaction") String submitDocumentTransaction,
+                                             @RequestParam("document") MultipartFile document) throws IOException {
 
-    @PostMapping("/document")
-    public String submitNewData(@RequestParam("data") MultipartFile data) {
-        String fileHash = null;
-        try {
-            fileHash = dataStorageService.save(data.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return fileHash;
+        //check user permissions - next phase
+        //send signed trx to blockchain + document to IPFS
+        return transportService.uploadDocument(submitDocumentTransaction, document.getBytes());
     }
 
-    @GetMapping(value = "/{hash}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable("hash") String fileHash, HttpServletRequest request) {
-        Resource resource = dataStorageService.loadDataAsResource(fileHash);
+    @PostMapping(value = "/businessMessage", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public String uploadBusinessMessage(@RequestParam("uploadDocumentTransaction") String submitDocumentTransaction,
+                                        @RequestParam("businessMessage") String businessMessage) {
+
+        //check user permissions - next phase
+        //send signed trx to blockchain + document to IPFS
+        String result = transportService.uploadDocument(submitDocumentTransaction, businessMessage.getBytes());
+        logger.info("uploaded document");
+        return result;
+    }
+
+    //endpoint for Multipart documents (PDF, images, etc...)
+    @PostMapping(value = "/document/id", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String GetMultipartDocumentId(@RequestBody MultipartFile data) throws IOException {
+        //check user permissions - next phase
+        //get document hash
+        String id = transportService.getDocumentId(data.getBytes());
+        logger.debug("document id calculated: "+ id);
+        return id;
+    }
+
+    //endpoint for XML, JSON documents (UBL messages)
+    @PostMapping(value = "/businessMessage/id", consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public String GetBusinessMessageId(@RequestBody String businessMessage) {
+        //check user permissions - next phase
+        //get document hash
+        String id = transportService.getDocumentId(businessMessage.getBytes());
+        logger.debug("business message id calculated: "+ id);
+        return id;    }
+
+    @GetMapping(value = "/{shipmentId}/document/{documentName}")
+    public ResponseEntity<Resource> downloadDocument(@PathVariable("shipmentId") String shipmentId,
+                                                     @PathVariable("documentName") String documentName) {
+
+        Resource resource = transportService.downloadDocument(shipmentId, documentName);
         String contentType = null;
         try {
             contentType = this.detectDocumentType(resource.getInputStream());
@@ -86,6 +97,12 @@ public class ShipmentController {
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
+    }
+
+    @GetMapping(value = "/{shipmentId}/businessMessage/{messageName}")
+    public ResponseEntity<Resource> downloadBusinessMessage(@PathVariable("shipmentId") String shipmentId,
+                                                            @PathVariable("messageName") String messageName) {
+        return null;
     }
 
     private String detectDocumentType(InputStream stream) throws IOException {

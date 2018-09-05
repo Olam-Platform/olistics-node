@@ -1,4 +1,4 @@
-package com.olam.node.service.infrastructure;
+package olam.node.Integration;
 
 import com.olam.node.service.infrastructure.blockchain.EthereumNodeServiceImpl;
 import com.olam.node.service.infrastructure.blockchain.Transport;

@@ -15,6 +15,9 @@ public class IPFSConfig {
     @Value("${ipfs.node.port}")
     private int ipfsNodePort;
 
+    @Value("${ipfs.node.multiAddress}")
+    private String ipfsNodeMultiAddr;
+
     @Value("${ipfs.cluster.host}")
     private String ipfsClusterHost;
 
@@ -24,13 +27,13 @@ public class IPFSConfig {
 
     @Bean
     public IPFS getIPFSDaemon() {
-        return new IPFS(ipfsNodeHost, ipfsNodePort);
+       return new IPFS(ipfsNodeMultiAddr);
     }
 
 
-    @Bean
-    public IPFSCluster getIPFSCluster() {
-        return new IPFSCluster(ipfsClusterHost, ipfsClusterPort);
-    }
+//    @Bean
+//    public IPFSCluster getIPFSCluster() {
+//        return new IPFSCluster(ipfsClusterHost, ipfsClusterPort);
+//    }
 
 }

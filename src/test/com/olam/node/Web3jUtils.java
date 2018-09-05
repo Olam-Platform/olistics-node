@@ -1,4 +1,4 @@
-package com.olam.node.utils;
+package olam.node;
 
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.admin.Admin;

@@ -1,5 +1,6 @@
-package com.olam.node.sdk;
+package com.olam.node.Integration;
 
+import com.olam.node.sdk.IPFSCluster;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

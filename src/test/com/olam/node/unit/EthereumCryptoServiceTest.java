@@ -1,5 +1,6 @@
-package com.olam.node.service.application;
+package com.olam.node.unit;
 
+import com.olam.node.service.application.EthereumCryptoService;
 import org.junit.Before;
 import org.junit.Test;
 import org.web3j.crypto.Credentials;

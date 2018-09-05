@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.util.List;
 
 public interface EthereumNodeService {
+
     String createAccount(String password) throws IOException;
 
     // deploy a Transport contract
@@ -27,9 +28,10 @@ public interface EthereumNodeService {
 
     float getEtherBalance(String accountAddress) throws IOException;
 
+    // sending offline prepared and signed transactions
     String sendDeployTx(String signedTx);
 
-    void sendSubmitDocTx(String tx);
+    void sendSubmitDocTx(String signedTx);
 
     Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(
             String fromAddress, String contractAddress, String docName
@@ -38,4 +40,10 @@ public interface EthereumNodeService {
     Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(
             String fromAddress, String contractAddress, String docName, int docVersion
     ) throws IOException;
+    String getDocumentId(String shipmentId, String documentName);
+
+//    boolean checkWritePermission(String signature, String shipmentId);
+
+//    boolean checkWritePermission(Sign.SignatureData signature, String shipmentId);
 }
+
