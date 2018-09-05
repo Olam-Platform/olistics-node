@@ -16,6 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/v1/shipment")
@@ -28,6 +30,13 @@ public class ShipmentController {
 
     private Detector detector = new DefaultDetector();
 
+
+    @GetMapping(value = "/nonce/{address}")
+    public BigInteger getNonce(@PathVariable String address) throws ExecutionException, InterruptedException {
+        BigInteger nonce = transportService.getNonce(address);
+        logger.debug(String.format("address %s returned with nonce %d", address, nonce.intValue()));
+        return nonce;
+    }
 
     @PostMapping
     public String createShipment(@RequestBody String trx) {

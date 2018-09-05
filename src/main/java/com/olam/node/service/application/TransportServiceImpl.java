@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
+import java.util.concurrent.ExecutionException;
+
 @Service
 public class TransportServiceImpl implements TransportService {
 
@@ -41,5 +44,9 @@ public class TransportServiceImpl implements TransportService {
 
         String documentId = ethereumNode.getDocumentId(shipmentId, documentName);
         return dataStorageService.loadDataAsResource(documentId);
+    }
+
+    public BigInteger getNonce(String address) throws ExecutionException, InterruptedException {
+        return ethereumNode.getNonce(address);
     }
 }

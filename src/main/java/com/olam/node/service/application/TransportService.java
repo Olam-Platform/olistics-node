@@ -1,7 +1,8 @@
 package com.olam.node.service.application;
 
 import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
+import java.math.BigInteger;
+import java.util.concurrent.ExecutionException;
 
 public interface TransportService {
 
@@ -13,4 +14,5 @@ public interface TransportService {
 
     Resource downloadDocument(String shipmentId, String documentName);
 
+    BigInteger getNonce(String address) throws ExecutionException, InterruptedException;
 }
