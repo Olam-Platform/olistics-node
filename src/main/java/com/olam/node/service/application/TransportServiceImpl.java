@@ -41,9 +41,12 @@ public class TransportServiceImpl implements TransportService {
 
     @Override
     public Resource downloadDocument(String shipmentId, String documentName) {
-
+        Resource resource = null;
         String documentId = ethereumNode.getDocumentId(shipmentId, documentName);
-        return dataStorageService.loadDataAsResource(documentId);
+        if (documentId != null) {
+            resource = dataStorageService.loadDataAsResource(documentId);
+        }
+        return resource;
     }
 
     public BigInteger getNonce(String address) throws ExecutionException, InterruptedException {

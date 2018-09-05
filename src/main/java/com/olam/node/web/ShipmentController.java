@@ -85,9 +85,9 @@ public class ShipmentController {
         logger.debug("business message id calculated: "+ id);
         return id;    }
 
-    @GetMapping(value = "/{shipmentId}/document/{documentName}")
-    public ResponseEntity<Resource> downloadDocument(@PathVariable("shipmentId") String shipmentId,
-                                                     @PathVariable("documentName") String documentName) {
+    @GetMapping(value = "/document")
+    public ResponseEntity<Resource> downloadDocument(@RequestParam("shipmentId") String shipmentId,
+                                                     @RequestParam("documentName") String documentName) {
 
         Resource resource = transportService.downloadDocument(shipmentId, documentName);
         String contentType = null;
@@ -108,9 +108,9 @@ public class ShipmentController {
                 .body(resource);
     }
 
-    @GetMapping(value = "/{shipmentId}/businessMessage/{messageName}")
-    public ResponseEntity<Resource> downloadBusinessMessage(@PathVariable("shipmentId") String shipmentId,
-                                                            @PathVariable("messageName") String messageName) {
+    @GetMapping(value = "/businessMessage")
+    public ResponseEntity<Resource> downloadBusinessMessage(@RequestParam("shipmentId") String shipmentId,
+                                                            @RequestParam("messageName") String messageName) {
         return null;
     }
 
