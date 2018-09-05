@@ -4,7 +4,6 @@ package com.olam.node.service.infrastructure;
 import com.olam.node.service.infrastructure.blockchain.EthereumNodeServiceImpl;
 import com.olam.node.utils.Web3jUtils;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;

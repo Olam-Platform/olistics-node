@@ -8,23 +8,23 @@ contract Transport {
         uint timeStamp;
         address[] recipients;
         mapping(address => bytes32) keys;
-    }
+    };
 
     // constants
-    string constant MANAGER_ROLE = "manager";
-    string constant SHIPPER_ROLE = "shipper";
-    string constant RECEIVER_ROLE = "receiver";
+    internal string constant MANAGER_ROLE = "manager";
+    internal string constant SHIPPER_ROLE = "shipper";
+    internal string constant RECEIVER_ROLE = "receiver";
 
-    uint startTime;                             // start time of this contract
-    string currentState;                        // current transport state
+    internal uint startTime;                             // start time of this contract
+    internal string currentState;                        // current transport state
 
-    mapping(string => Document[])   documents;                      // all submitted documents for this transport
-    mapping(string => bool)         documentsExist;                 // helper mapping
-    mapping(string => address)      roles;                          // all transport roles
-    address[]                       addresses;
+    internal mapping(string => Document[])   documents;                      // all submitted documents for this transport
+    internal mapping(string => bool)         documentsExist;                 // helper mapping
+    internal mapping(string => address)      roles;                          // all transport roles
+    internal address[]                       addresses;
 
 
-    mapping(address => string[])    directory;                      //
+    internal mapping(address => string[])    directory;                      //
 
     // events
     event TransportStarted(uint timeStamp, address indexed recipient);

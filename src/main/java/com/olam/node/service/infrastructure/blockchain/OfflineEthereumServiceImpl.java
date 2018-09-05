@@ -1,16 +1,9 @@
 package com.olam.node.service.infrastructure.blockchain;
 
-import com.olam.node.service.infrastructure.Transport;
-import com.olam.node.service.infrastructure.blockchain.GenericEthereumNode;
-import com.olam.node.service.infrastructure.blockchain.OfflineEthereumService;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
-import org.web3j.abi.datatypes.Utf8String;
-import org.web3j.abi.datatypes.generated.Bytes32;
-import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.*;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.utils.Numeric;

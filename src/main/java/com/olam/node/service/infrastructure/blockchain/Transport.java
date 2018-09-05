@@ -1,4 +1,4 @@
-package com.olam.node.service.infrastructure;
+package com.olam.node.service.infrastructure.blockchain;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

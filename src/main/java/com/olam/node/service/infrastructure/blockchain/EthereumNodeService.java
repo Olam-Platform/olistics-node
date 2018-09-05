@@ -1,8 +1,6 @@
-package com.olam.node.service.infrastructure;
+package com.olam.node.service.infrastructure.blockchain;
 
-import org.web3j.abi.datatypes.Type;
 import org.web3j.crypto.Credentials;
-import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.tuples.generated.Tuple2;
 import org.web3j.tuples.generated.Tuple4;
 

@@ -1,7 +1,5 @@
-package com.olam.node.service.infrastructure;
+package com.olam.node.service.infrastructure.blockchain;
 
-import com.olam.node.service.infrastructure.blockchain.EthereumNodeService;
-import com.olam.node.service.infrastructure.blockchain.OfflineEthereumServiceImpl;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
