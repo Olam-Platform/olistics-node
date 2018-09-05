@@ -1,4 +1,4 @@
-package com.olam.node.service.infrastructure;
+package com.olam.node.service.infrastructure.blockchain;
 
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;

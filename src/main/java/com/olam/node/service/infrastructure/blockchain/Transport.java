@@ -55,24 +55,19 @@ public class Transport extends Contract {
     public static final String FUNC_SETSTATE = "setState";
 
     public static final Event TRANSPORTSTARTED_EVENT = new Event("TransportStarted", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Address>(true) {}));
-    ;
+            Arrays.asList(new TypeReference<Uint256>() {}, new TypeReference<Address>(true) {}));
 
     public static final Event DOCUMENTSUBMITTED_EVENT = new Event("DocumentSubmitted", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>(true) {}));
-    ;
+            Arrays.asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>(true) {}));
 
     public static final Event DOCUMENTREQUESTED_EVENT = new Event("DocumentRequested", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}));
-    ;
+            Arrays.asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}));
 
     public static final Event STATECHANGED_EVENT = new Event("StateChanged", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}, new TypeReference<Utf8String>() {}, new TypeReference<Utf8String>() {}, new TypeReference<Address>(true) {}));
-    ;
+            Arrays.asList(new TypeReference<Utf8String>() {}, new TypeReference<Utf8String>() {}, new TypeReference<Utf8String>() {}, new TypeReference<Address>(true) {}));
 
     public static final Event WARN_EVENT = new Event("Warn", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
-    ;
+            Arrays.asList(new TypeReference<Utf8String>() {}));
 
     protected Transport(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
         super(BINARY, contractAddress, web3j, credentials, gasPrice, gasLimit);
@@ -84,8 +79,8 @@ public class Transport extends Contract {
 
     public RemoteCall<Tuple4<String, BigInteger, String, BigInteger>> requestDocument(String name) {
         final Function function = new Function(FUNC_REQUESTDOCUMENT, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(name)), 
-                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {}));
+                Arrays.asList(new org.web3j.abi.datatypes.Utf8String(name)),
+                Arrays.asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {}));
         return new RemoteCall<Tuple4<String, BigInteger, String, BigInteger>>(
                 new Callable<Tuple4<String, BigInteger, String, BigInteger>>() {
                     @Override
@@ -102,32 +97,32 @@ public class Transport extends Contract {
 
     public RemoteCall<String> getState() {
         final Function function = new Function(FUNC_GETSTATE, 
-                Arrays.<Type>asList(), 
-                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
+                Arrays.asList(),
+                Arrays.asList(new TypeReference<Utf8String>() {}));
         return executeRemoteCallSingleValueReturn(function, String.class);
     }
 
     public RemoteCall<String> getRole(String roleAddress) {
         final Function function = new Function(FUNC_GETROLE, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(roleAddress)), 
-                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}));
+                Arrays.asList(new org.web3j.abi.datatypes.Address(roleAddress)),
+                Arrays.asList(new TypeReference<Utf8String>() {}));
         return executeRemoteCallSingleValueReturn(function, String.class);
     }
 
     public RemoteCall<TransactionReceipt> addRole(String role, String roleAddress) {
         final Function function = new Function(
                 FUNC_ADDROLE, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(role), 
+                Arrays.asList(new org.web3j.abi.datatypes.Utf8String(role),
                 new org.web3j.abi.datatypes.Address(roleAddress)), 
-                Collections.<TypeReference<?>>emptyList());
+                Collections.emptyList());
         return executeRemoteCallTransaction(function);
     }
 
     public RemoteCall<Tuple4<String, BigInteger, String, BigInteger>> requestDocument(String name, BigInteger version) {
         final Function function = new Function(FUNC_REQUESTDOCUMENT, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(name), 
+                Arrays.asList(new org.web3j.abi.datatypes.Utf8String(name),
                 new org.web3j.abi.datatypes.generated.Uint256(version)), 
-                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {}));
+                Arrays.asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {}));
         return new RemoteCall<Tuple4<String, BigInteger, String, BigInteger>>(
                 new Callable<Tuple4<String, BigInteger, String, BigInteger>>() {
                     @Override
@@ -145,42 +140,42 @@ public class Transport extends Contract {
     public RemoteCall<TransactionReceipt> submitDocument(String name, String url, BigInteger timeStamp, List<String> recipients, List<byte[]> keys) {
         final Function function = new Function(
                 FUNC_SUBMITDOCUMENT, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(name), 
+                Arrays.asList(new org.web3j.abi.datatypes.Utf8String(name),
                 new org.web3j.abi.datatypes.Utf8String(url), 
                 new org.web3j.abi.datatypes.generated.Uint256(timeStamp), 
                 new org.web3j.abi.datatypes.DynamicArray<org.web3j.abi.datatypes.Address>(
                         org.web3j.abi.Utils.typeMap(recipients, org.web3j.abi.datatypes.Address.class)), 
                 new org.web3j.abi.datatypes.DynamicArray<org.web3j.abi.datatypes.generated.Bytes32>(
                         org.web3j.abi.Utils.typeMap(keys, org.web3j.abi.datatypes.generated.Bytes32.class))), 
-                Collections.<TypeReference<?>>emptyList());
+                Collections.emptyList());
         return executeRemoteCallTransaction(function);
     }
 
     public RemoteCall<String> getAddress(String role) {
         final Function function = new Function(FUNC_GETADDRESS, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(role)), 
-                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}));
+                Arrays.asList(new org.web3j.abi.datatypes.Utf8String(role)),
+                Arrays.asList(new TypeReference<Address>() {}));
         return executeRemoteCallSingleValueReturn(function, String.class);
     }
 
     public RemoteCall<TransactionReceipt> setState(String newState, String cause) {
         final Function function = new Function(
                 FUNC_SETSTATE, 
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(newState), 
+                Arrays.asList(new org.web3j.abi.datatypes.Utf8String(newState),
                 new org.web3j.abi.datatypes.Utf8String(cause)), 
-                Collections.<TypeReference<?>>emptyList());
+                Collections.emptyList());
         return executeRemoteCallTransaction(function);
     }
 
     public static RemoteCall<Transport> deploy(Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit, String shipperAddress, String receiverAddress, BigInteger timeStamp) {
-        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(shipperAddress), 
+        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.asList(new org.web3j.abi.datatypes.Address(shipperAddress),
                 new org.web3j.abi.datatypes.Address(receiverAddress), 
                 new org.web3j.abi.datatypes.generated.Uint256(timeStamp)));
         return deployRemoteCall(Transport.class, web3j, credentials, gasPrice, gasLimit, BINARY, encodedConstructor);
     }
 
     public static RemoteCall<Transport> deploy(Web3j web3j, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit, String shipperAddress, String receiverAddress, BigInteger timeStamp) {
-        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(shipperAddress), 
+        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.asList(new org.web3j.abi.datatypes.Address(shipperAddress),
                 new org.web3j.abi.datatypes.Address(receiverAddress), 
                 new org.web3j.abi.datatypes.generated.Uint256(timeStamp)));
         return deployRemoteCall(Transport.class, web3j, transactionManager, gasPrice, gasLimit, BINARY, encodedConstructor);

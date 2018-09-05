@@ -1,5 +1,7 @@
 package com.olam.node.service.infrastructure;
 
+import com.olam.node.service.infrastructure.blockchain.EthereumNodeService;
+import com.olam.node.service.infrastructure.blockchain.OfflineEthereumServiceImpl;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
@@ -25,7 +27,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implements EthereumNodeService {
     private final int WAIT_TX_INTERVAL        = 10000;     // in milliseconds
@@ -34,7 +35,7 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
 
     protected Admin ethAdmin;
 
-    EthereumNodeServiceImpl(String rpcUrl) {
+    public EthereumNodeServiceImpl(String rpcUrl) {
         super(rpcUrl);
         ethAdmin = Admin.build(new HttpService(RPC_URL));
     }
