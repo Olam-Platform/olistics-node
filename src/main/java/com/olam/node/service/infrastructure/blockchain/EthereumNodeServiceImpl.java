@@ -1,18 +1,23 @@
 package com.olam.node.service.infrastructure.blockchain;
 
-import com.olam.node.service.infrastructure.Transport;
-import org.web3j.crypto.*;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.crypto.Credentials;
 import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.response.EthGetBalance;
-import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tuples.generated.Tuple2;
+import org.web3j.tuples.generated.Tuple4;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
-import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -22,11 +27,9 @@ import java.util.List;
 import java.util.Optional;
 
 public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implements EthereumNodeService {
-    private final int WAIT_TX_INTERVAL = 10000;     // in milliseconds
+    private final int WAIT_TX_INTERVAL        = 10000;     // in milliseconds
     private final int RINKEBY_AVERAGE_TX_TIME = 15000;
-    private final int WAIT_TX_MAX_TRIES = 10;
-    private final String PERSONAL_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n";
-    private final String MESSAGE = "RULE THE OLAM";
+    private final int WAIT_TX_MAX_TRIES       =    10;
 
     protected Admin ethAdmin;
 
@@ -36,7 +39,9 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
     }
 
     @Override
-    public Transport deployTransportContract(Credentials credentials, String shipperAddress, String receiverAddress, long msecSinceEpoc) throws Exception {
+    public Transport deployTransportContract(
+            Credentials credentials, String shipperAddress, String receiverAddress, long msecSinceEpoc
+    ) throws Exception {
         return Transport.deploy(web3j, credentials, gasPrice, gasLimit, shipperAddress, receiverAddress, BigInteger.valueOf(msecSinceEpoc)).send();
     }
 
@@ -79,30 +84,63 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
 
     @Override
     public String sendDeployTx(String signedTx) {
-        return sendTx(signedTx).get().getContractAddress();
+        return sendTx(signedTx).getContractAddress();
     }
 
     @Override
-    public void sendSubmitDocTx(String signedTx) {
-        sendTx(signedTx);
+    public void sendSubmitDocTx(String tx) {
+        sendTx(tx);
     }
 
     @Override
-    public boolean checkWritePermission(String signature, String shipmentId){
+    public Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(
+            String fromAddress, String contractAddress, String docName
+    ) throws IOException {
+        final Function function = new Function(
+                Transport.FUNC_REQUESTDOCUMENT,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(docName)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {})
+        );
 
-        BigInteger publicKey = getPublicKey(signature);
-        Transport shipment = Transport.load(shipmentId, this.web3j, credentials, gasPrice, gasLimit);
-        String role = null;
-        try {
-            role = shipment.getRole(publicKey.toString()).send();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return role.equals("Manager");
+        String encodedFunction = FunctionEncoder.encode(function);
+        Transaction tx = Transaction.createEthCallTransaction(fromAddress, contractAddress, encodedFunction);
+
+        EthCall ethCall = web3j.ethCall(tx, DefaultBlockParameterName.LATEST).send();
+
+        List<Type> callResults = FunctionReturnDecoder.decode(ethCall.getValue(), function.getOutputParameters());
+
+        assert(callResults.size() == 4);
+        return new Tuple4<>(
+                (String) callResults.get(0).getValue(),
+                (BigInteger) callResults.get(1).getValue(),
+                (String) callResults.get(2).getValue(),
+                (BigInteger) callResults.get(3).getValue()
+        );
     }
 
+    @Override
+    public Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(String fromAddress, String contractAddress, String docName, int docVersion) throws IOException {
+        Function function = new Function(
+                Transport.FUNC_REQUESTDOCUMENT,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(docName), new org.web3j.abi.datatypes.generated.Uint256(docVersion)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {})
+        );
 
-    private Optional<TransactionReceipt> sendTx(String tx) {
+        String encodedFunction = FunctionEncoder.encode(function);
+        Transaction tx = Transaction.createEthCallTransaction(fromAddress, contractAddress, encodedFunction);
+
+        EthCall ethCall = web3j.ethCall(tx, DefaultBlockParameterName.LATEST).send();
+
+        List<Type> callResults = FunctionReturnDecoder.decode(ethCall.getValue(), function.getOutputParameters());
+        return new Tuple4<>(
+                (String) callResults.get(0).getValue(),
+                (BigInteger) callResults.get(1).getValue(),
+                (String) callResults.get(2).getValue(),
+                (BigInteger) callResults.get(3).getValue()
+        );
+    }
+
+    private TransactionReceipt sendTx(String tx) {
         Optional<TransactionReceipt> result = null;
         EthGetTransactionReceipt receipt;
 
@@ -123,7 +161,7 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
                     }
                 }
 
-                if (result == null) {
+                if(result == null) {
                     Thread.sleep(WAIT_TX_INTERVAL);
                 }
 
@@ -133,48 +171,6 @@ public class EthereumNodeServiceImpl extends OfflineEthereumServiceImpl implemen
             e.printStackTrace();
         }
 
-        return result;
+        return result.get();
     }
-
-    /*******PRIVATE UTILITY METHODS *****************/
-
-    private Sign.SignatureData getSignatureData(String signature) {
-        byte[] signatureBytes = Numeric.hexStringToByteArray(signature);
-        byte v = signatureBytes[64];
-        if (v < 27) {
-            v += 27;
-        }
-
-        Sign.SignatureData sd = new Sign.SignatureData(
-                v,
-                Arrays.copyOfRange(signatureBytes, 0, 32),
-                Arrays.copyOfRange(signatureBytes, 32, 64));
-
-        return sd;
-    }
-
-    private byte[] getMsgHash() {
-        String prefix = PERSONAL_MESSAGE_PREFIX + MESSAGE.length();
-        byte[] msgHash = Hash.sha3((prefix + MESSAGE).getBytes());
-        return msgHash;
-    }
-
-    private BigInteger getPublicKey(String signature) {
-
-        Sign.SignatureData sd = getSignatureData(signature);
-        byte[] msgHash = getMsgHash();
-
-        for (int i = 0; i < 4; i++) {
-            BigInteger publicKey = Sign.recoverFromSignature(
-                    (byte) i,
-                    new ECDSASignature(new BigInteger(1, sd.getR()), new BigInteger(1, sd.getS())),
-                    msgHash);
-
-            if (publicKey != null) {
-                return publicKey;
-            }
-        }
-        return null;
-    }
-
 }
