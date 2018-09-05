@@ -1,21 +1,23 @@
 package com.olam.node.sdk;
 
-import com.olam.node.service.infrastructure.blockchain.OfflineEthereumServiceImpl;
+import com.olam.node.service.infrastructure.blockchain.OfflineEthereumService;
+import org.apache.poi.hssf.record.BiffHeaderInput;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 
 public class ShipmentImpl implements Shipment {
-    OfflineEthereumServiceImpl offlineNodeService;
+    OfflineEthereumService offlineNodeService;
 
     public ShipmentImpl(String nodeRpcUrl) {
-        offlineNodeService = new OfflineEthereumServiceImpl(nodeRpcUrl);
+        offlineNodeService = new OfflineEthereumService();
     }
 
     @Override
@@ -24,7 +26,11 @@ public class ShipmentImpl implements Shipment {
     ) throws ExecutionException, InterruptedException {
         long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
 
-        RawTransaction deployTx = offlineNodeService.buildDeployTx(managerAddress, shipperAddress, receiverAddress, msecSinceEpoc);
+        BigInteger nonce = BigInteger.ZERO;        // get it from the olma-node
+        BigInteger gasPrice = BigInteger.valueOf(20000000000L);
+        BigInteger gasLimit = BigInteger.valueOf(6721975);
+
+        RawTransaction deployTx = offlineNodeService.buildDeployTx(shipperAddress, receiverAddress, msecSinceEpoc, nonce, gasPrice, gasLimit);
         String signedDeployTx = offlineNodeService.signTransaction(deployTx, credentials);
 
         /// ------------------------------------------------------------------------------------------------------------------

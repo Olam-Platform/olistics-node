@@ -1,4 +1,4 @@
-package olam.node.Integration;
+package com.olam.node.integration;
 
 import com.olam.node.service.infrastructure.blockchain.EthereumNodeServiceImpl;
 import com.olam.node.service.infrastructure.blockchain.Transport;
@@ -43,7 +43,10 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
     public void deployContract() {
         try {
             long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
-            lastDeployedContract = nodeService.deployTransportContract(managerCredentials, shipperCredentials.getAddress(), receiverCredentials.getAddress(), msecSinceEpoc);
+            lastDeployedContract = nodeService.deployTransportContract(
+                    managerCredentials, shipperCredentials.getAddress(), receiverCredentials.getAddress(), msecSinceEpoc
+            );
+
             assertNotNull(lastDeployedContract);
 
             verifyContractInitialState(lastDeployedContract);
@@ -115,8 +118,9 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
             keys.add(key2);
 
             for (int i = 0 ; i < 2 ; i++) {
+                BigInteger nonce = nodeService.getNonce(managerCredentials.getAddress());
                 RawTransaction submitDcoTx = nodeService.buildSubmitDocTx(
-                        managerCredentials.getAddress(), contractAddress, DOC_NAME, DOC_URL, recipientsAddresses, keys, msecSinceEpoc
+                        managerCredentials.getAddress(), contractAddress, DOC_NAME, DOC_URL, recipientsAddresses, keys, msecSinceEpoc, nonce, gasPrice, gasLimit
                 );
 
                 assertNotNull(submitDcoTx);
@@ -184,8 +188,10 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
     public void testOfflineDeployContract() {
         try {
             long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
+            BigInteger nonce = nodeService.getNonce(managerCredentials.getAddress());
+
             RawTransaction deployTx = nodeService.buildDeployTx(
-                    managerCredentials.getAddress(), shipperCredentials.getAddress(), receiverCredentials.getAddress(), msecSinceEpoc
+                    shipperCredentials.getAddress(), receiverCredentials.getAddress(), msecSinceEpoc, nonce, gasPrice, gasLimit
             );
             assertNotNull(deployTx);
 
