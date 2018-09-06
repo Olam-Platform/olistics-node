@@ -1,5 +1,7 @@
 package com.olam.node.service.infrastructure.blockchain;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
@@ -45,6 +47,8 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
 
     private final Web3j web3j;
     private final Admin ethAdmin;
+
+    private final Logger logger = LoggerFactory.getLogger(EthereumNodeServiceImpl.class);
 
     public EthereumNodeServiceImpl(String rpcUrl) {
         web3j = Web3j.build(new HttpService(rpcUrl));
@@ -117,7 +121,11 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
         final Function function = new Function(
                 Transport.FUNC_REQUESTDOCUMENT,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(docName)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {})
+                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {
+                }, new TypeReference<Uint256>() {
+                }, new TypeReference<Address>() {
+                }, new TypeReference<Uint256>() {
+                })
         );
 
         String encodedFunction = FunctionEncoder.encode(function);
@@ -127,7 +135,7 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
 
         List<Type> callResults = FunctionReturnDecoder.decode(ethCall.getValue(), function.getOutputParameters());
 
-        assert(callResults.size() == 4);
+        assert (callResults.size() == 4);
         return new Tuple4<>(
                 (String) callResults.get(0).getValue(),
                 (BigInteger) callResults.get(1).getValue(),
@@ -177,7 +185,11 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
         Function function = new Function(
                 Transport.FUNC_REQUESTDOCUMENT,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Utf8String(docName), new org.web3j.abi.datatypes.generated.Uint256(docVersion)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {}, new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {})
+                Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {
+                }, new TypeReference<Uint256>() {
+                }, new TypeReference<Address>() {
+                }, new TypeReference<Uint256>() {
+                })
         );
 
         String encodedFunction = FunctionEncoder.encode(function);
@@ -209,37 +221,22 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
     }
 
     private TransactionReceipt sendTx(String tx) {
-        Optional<TransactionReceipt> result = null;
-        EthGetTransactionReceipt receipt;
+        EthSendTransaction ethSendTransaction;
+        Optional<TransactionReceipt> transactionReceipt = null;
 
         try {
-            EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(tx).send();
-            Thread.sleep(RINKEBY_AVERAGE_TX_TIME);
+            //sending trx to blockchain and polling trxReceipt
+            ethSendTransaction = web3j.ethSendRawTransaction(tx).send();
+            String transactionHash = ethSendTransaction.getTransactionHash();
+            transactionReceipt = this.getTransactionReceipt(transactionHash, WAIT_TX_INTERVAL, WAIT_TX_MAX_TRIES);
 
-            int nRetries = 0;
-            String transactionHash;
-
-            do {
-                transactionHash = ethSendTransaction.getTransactionHash();
-
-                if (transactionHash != null) {
-                    receipt = web3j.ethGetTransactionReceipt(transactionHash).send();
-                    if (receipt.getTransactionReceipt().isPresent()) {
-                        result = receipt.getTransactionReceipt();
-                    }
-                }
-
-                if(result == null) {
-                    Thread.sleep(WAIT_TX_INTERVAL);
-                }
-
-                nRetries++;
-            } while ((nRetries < WAIT_TX_MAX_TRIES) && (result == null));
-        } catch (IOException | InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
-        return result.get();
+        if (!transactionReceipt.isPresent()) {
+            logger.error("Transaction receipt not generated after several attempts");
+        }
+        return transactionReceipt.get();
     }
 
     // region utility methods
@@ -281,5 +278,32 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
         }
         return null;
     }
+
+    private Optional<TransactionReceipt> getTransactionReceipt(
+            String transactionHash, int sleepDuration, int attempts) throws Exception {
+
+        Optional<TransactionReceipt> receiptOptional =
+                sendTransactionReceiptRequest(transactionHash);
+        for (int i = 0; i < attempts; i++) {
+            if (!receiptOptional.isPresent()) {
+                Thread.sleep(sleepDuration);
+                receiptOptional = sendTransactionReceiptRequest(transactionHash);
+            } else {
+                break;
+            }
+        }
+
+        return receiptOptional;
+    }
+
+    private Optional<TransactionReceipt> sendTransactionReceiptRequest(
+            String transactionHash) throws Exception {
+        EthGetTransactionReceipt transactionReceipt =
+                web3j.ethGetTransactionReceipt(transactionHash).sendAsync().get();
+
+        return transactionReceipt.getTransactionReceipt();
+    }
+
     // endregion
+
 }

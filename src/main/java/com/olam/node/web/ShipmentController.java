@@ -32,10 +32,10 @@ public class ShipmentController {
 
 
     @GetMapping(value = "/nonce/{address}")
-    public BigInteger getNonce(@PathVariable String address) throws ExecutionException, InterruptedException {
+    public String getNonce(@PathVariable String address) throws ExecutionException, InterruptedException {
         BigInteger nonce = transportService.getNonce(address);
         logger.debug(String.format("address %s returned with nonce %d", address, nonce.intValue()));
-        return nonce;
+        return String.valueOf(nonce);
     }
 
     @PostMapping
@@ -72,7 +72,7 @@ public class ShipmentController {
         //check user permissions - next phase
         //get document hash
         String id = transportService.getDocumentId(data.getBytes());
-        logger.debug("document id calculated: "+ id);
+        logger.debug("document id calculated: " + id);
         return id;
     }
 
@@ -82,8 +82,9 @@ public class ShipmentController {
         //check user permissions - next phase
         //get document hash
         String id = transportService.getDocumentId(businessMessage.getBytes());
-        logger.debug("business message id calculated: "+ id);
-        return id;    }
+        logger.debug("business message id calculated: " + id);
+        return id;
+    }
 
     @GetMapping(value = "/document")
     public ResponseEntity<Resource> downloadDocument(@RequestParam("shipmentId") String shipmentId,
