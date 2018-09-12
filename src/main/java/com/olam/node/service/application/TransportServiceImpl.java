@@ -5,7 +5,9 @@ import com.olam.node.service.infrastructure.storage.DataStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.web3j.tuples.generated.Tuple4;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.ExecutionException;
 
@@ -27,7 +29,7 @@ public class TransportServiceImpl implements TransportService {
     @Override
     public String getDocumentId(byte[] document) {
 
-        return dataStorageService.getdataIdentifier(document);
+        return dataStorageService.getDataIdentifier(document);
     }
 
     @Override
@@ -40,13 +42,13 @@ public class TransportServiceImpl implements TransportService {
     }
 
     @Override
-    public Resource downloadDocument(String shipmentId, String documentName) {
-        Resource resource = null;
-        String documentId = ethereumNode.getDocumentId(shipmentId, documentName);
-        if (documentId != null) {
-            resource = dataStorageService.loadDataAsResource(documentId);
+    public byte[] downloadDocument(String fromAddress, String shipmentId, String documentName) throws IOException {
+        byte[] data = null;
+        Tuple4<String, BigInteger, String, BigInteger> documentMetaData = ethereumNode.sendRequestDocCall(fromAddress, shipmentId, documentName);
+        if (documentMetaData != null) {
+            data = dataStorageService.loadData(documentMetaData.getValue1());
         }
-        return resource;
+        return data;
     }
 
     public BigInteger getNonce(String address) throws ExecutionException, InterruptedException {

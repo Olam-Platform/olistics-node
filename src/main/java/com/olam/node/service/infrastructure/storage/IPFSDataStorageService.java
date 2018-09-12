@@ -21,7 +21,7 @@ public class IPFSDataStorageService implements DataStorageService {
 //    private IPFSCluster cluster;
 
     @Override
-    public String getdataIdentifier(byte[] data) {
+    public String getDataIdentifier(byte[] data) {
         return save(data, true);
     }
 
@@ -47,19 +47,17 @@ public class IPFSDataStorageService implements DataStorageService {
     }
 
 
-    public Resource loadDataAsResource(String hash) {
+    public byte[] loadData(String hash) {
         byte[] dataContents = null;
         Multihash dataPointer = Multihash.fromBase58(hash);
-        Resource resource = null;
 
         try {
             dataContents = ipfs.cat(dataPointer);
-            resource = new ByteArrayResource(dataContents);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return resource;
+        return dataContents;
     }
 
 }

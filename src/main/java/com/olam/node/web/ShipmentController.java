@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,12 +46,14 @@ public class ShipmentController {
 
     //endpoint for uploading Multipart documents (PDF, images, etc...)
     @PostMapping(value = "/document", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public String uploadNewMultipartDocument(@RequestParam("uploadDocumentTransaction") String submitDocumentTransaction,
+    public String uploadNewMultipartDocument(@RequestPart("transaction") String transaction,
                                              @RequestParam("document") MultipartFile document) throws IOException {
 
         //check user permissions - next phase
         //send signed trx to blockchain + document to IPFS
-        return transportService.uploadDocument(submitDocumentTransaction, document.getBytes());
+        String docId = transportService.uploadDocument(transaction, document.getBytes());
+        logger.debug(String.format("document %s, hash: %s was uploaded to shipment", document.getName(), docId));
+        return docId;
     }
 
     @PostMapping(value = "/businessMessage", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -67,11 +68,11 @@ public class ShipmentController {
     }
 
     //endpoint for Multipart documents (PDF, images, etc...)
-    @PostMapping(value = "/document/id", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public String GetMultipartDocumentId(@RequestBody MultipartFile data) throws IOException {
+    @PostMapping(value = "/document/id", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public String GetMultipartDocumentId(@RequestParam MultipartFile document) throws IOException {
         //check user permissions - next phase
         //get document hash
-        String id = transportService.getDocumentId(data.getBytes());
+        String id = transportService.getDocumentId(document.getBytes());
         logger.debug("document id calculated: " + id);
         return id;
     }
@@ -86,28 +87,38 @@ public class ShipmentController {
         return id;
     }
 
+//    @GetMapping(value = "/document")
+//    public ResponseEntity<byte[]> downloadDocument(@QueryParam("shipmentId") String shipmentId,
+//                                                   @QueryParam("documentName") String documentName) {
+//
+//        byte[] document = transportService.downloadDocument(shipmentId, documentName);
+//        String contentType = null;
+//        try {
+//            contentType = this.detectDocumentType(new ByteArrayInputStream(document));
+//        } catch (IOException ex) {
+//            logger.info("Could not determine file type.");
+//        }
+//
+//        // Fallback to the default content type if type could not be determined
+//        if (contentType == null) {
+//            contentType = "application/octet-stream";
+//        }
+//
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.parseMediaType(contentType))
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentName + "\"")
+//                .body(document);
+//    }
+
     @GetMapping(value = "/document")
-    public ResponseEntity<Resource> downloadDocument(@RequestParam("shipmentId") String shipmentId,
-                                                     @RequestParam("documentName") String documentName) {
-
-        Resource resource = transportService.downloadDocument(shipmentId, documentName);
-        String contentType = null;
-        try {
-            contentType = this.detectDocumentType(resource.getInputStream());
-        } catch (IOException ex) {
-            logger.info("Could not determine file type.");
-        }
-
-        // Fallback to the default content type if type could not be determined
-        if (contentType == null) {
-            contentType = "application/octet-stream";
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
+    public byte[] downloadDocument(@RequestParam("address") String address, @RequestParam("shipmentId") String shipmentId,
+                                   @RequestParam("docName") String docName) throws IOException {
+        byte[] document = transportService.downloadDocument(address, shipmentId, docName);
+        logger.debug(String.format("downloaded document: %s, from shipment: %s, document size: %d KB",
+                docName, shipmentId, document.length / 1024));
+        return document;
     }
+
 
     @GetMapping(value = "/businessMessage")
     public ResponseEntity<Resource> downloadBusinessMessage(@RequestParam("shipmentId") String shipmentId,

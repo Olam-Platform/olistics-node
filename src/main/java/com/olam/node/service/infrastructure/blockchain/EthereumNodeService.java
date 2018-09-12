@@ -23,8 +23,6 @@ public interface EthereumNodeService {
 
     void submitDocument(Credentials credentials, String contractAddress, String docName, String docUrl);
 
-    Tuple2<String, byte[]> requestDocument(String contractAddress, String docName);
-
     List<String> getAccounts() throws IOException;
 
     void sendEther(Credentials credentials, String recipient, float sum) throws Exception;
@@ -43,8 +41,6 @@ public interface EthereumNodeService {
     Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(
             String fromAddress, String contractAddress, String docName, int docVersion
     ) throws IOException;
-
-    String getDocumentId(String shipmentId, String documentName);
 
     void registerForShipmentEvent(Observer observer);
 

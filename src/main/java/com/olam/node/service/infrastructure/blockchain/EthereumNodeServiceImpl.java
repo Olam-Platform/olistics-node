@@ -10,17 +10,13 @@ import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.abi.datatypes.generated.Uint256;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.ECDSASignature;
-import org.web3j.crypto.Hash;
-import org.web3j.crypto.Sign;
+import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.http.HttpService;
-import org.web3j.tuples.generated.Tuple2;
 import org.web3j.tuples.generated.Tuple4;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
@@ -73,11 +69,6 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
     }
 
     @Override
-    public Tuple2<String, byte[]> requestDocument(String contractAddress, String docName) {
-        return null;
-    }
-
-    @Override
     public List<String> getAccounts() throws IOException {
         return ethAdmin.ethAccounts().send().getAccounts();
     }
@@ -112,6 +103,13 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
     @Override
     public void sendSubmitDocTx(String signedTx) {
         sendTx(signedTx);
+    }
+
+    //get document with ethereum signatures
+    public Tuple4<String, BigInteger, String, BigInteger> requestDocument(String signature, String contractAdress, String docName) throws IOException {
+        BigInteger publicKey = this.getPublicKey(signature);
+        String address = Keys.getAddress(publicKey);
+        return sendRequestDocCall(address, contractAdress, docName);
     }
 
     @Override
@@ -206,10 +204,6 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
         );
     }
 
-    @Override
-    public String getDocumentId(String shipmentId, String documentName) {
-        return null;
-    }
 
     @Override
     public void registerForShipmentEvent(Observer observer) {

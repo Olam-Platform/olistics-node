@@ -1,6 +1,6 @@
 package com.olam.node.service.application;
 
-import org.springframework.core.io.Resource;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.ExecutionException;
 
@@ -12,7 +12,8 @@ public interface TransportService {
 
     String uploadDocument(String submitDocumentTransaction, byte[] document);
 
-    Resource downloadDocument(String shipmentId, String documentName);
+    byte[] downloadDocument(String fromAddress, String shipmentId, String documentName) throws IOException;
 
     BigInteger getNonce(String address) throws ExecutionException, InterruptedException;
+
 }
