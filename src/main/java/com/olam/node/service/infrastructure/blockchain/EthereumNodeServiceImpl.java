@@ -5,18 +5,17 @@ import org.slf4j.LoggerFactory;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
-import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.protocol.websocket.WebSocketService;
 import org.web3j.tuples.generated.Tuple4;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
@@ -46,9 +45,10 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
 
     private final Logger logger = LoggerFactory.getLogger(EthereumNodeServiceImpl.class);
 
-    public EthereumNodeServiceImpl(String rpcUrl) {
-        web3j = Web3j.build(new HttpService(rpcUrl));
-        ethAdmin = Admin.build(new HttpService(rpcUrl));
+    public EthereumNodeServiceImpl(String websocketUrl) {
+//        web3j = Web3j.build(new HttpService(rpcUrl));
+        web3j = Web3j.build(new WebSocketService(websocketUrl, false));
+        ethAdmin = Admin.build(new HttpService(websocketUrl));
     }
 
     @Override
@@ -207,6 +207,18 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
 
     @Override
     public void registerForShipmentEvent(Observer observer) {
+
+    }
+
+    @Override
+    public void registerForShipmentEvent(String shipmentId, String address) throws IOException {
+        Event event = new Event("Notify",
+                Arrays.asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
+        String encodedEventSignature = "TransportStarted";
+        EthFilter filter = new EthFilter(DefaultBlockParameterName.EARLIEST,
+                DefaultBlockParameterName.LATEST, shipmentId).addSingleTopic(encodedEventSignature);
+        EthLog log = web3j.ethGetLogs(filter).send();
+        List<EthLog.LogResult> logs = log.getLogs();
     }
 
     @Override
@@ -298,6 +310,5 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
         return transactionReceipt.getTransactionReceipt();
     }
 
-    // endregion
 
 }

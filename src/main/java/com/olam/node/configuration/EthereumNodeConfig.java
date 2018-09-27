@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class EthereumNodeConfig {
 
-    @Value("${rpcurl.ethereum.rinkeby}")
+    @Value("${websocket.url.infura}")
     private String rpcUrl;
 
     @Bean

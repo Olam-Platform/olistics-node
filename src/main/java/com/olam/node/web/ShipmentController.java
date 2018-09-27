@@ -1,13 +1,15 @@
 package com.olam.node.web;
 
 import com.olam.node.service.application.TransportService;
+import com.olam.node.service.application.entities.SubscribeData;
+import com.olam.node.service.application.EventsService;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.metadata.Metadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,8 @@ public class ShipmentController {
 
     @Autowired
     private TransportService transportService;
+    @Autowired
+    private EventsService eventsService;
 
     private Detector detector = new DefaultDetector();
 
@@ -87,28 +91,6 @@ public class ShipmentController {
         return id;
     }
 
-//    @GetMapping(value = "/document")
-//    public ResponseEntity<byte[]> downloadDocument(@QueryParam("shipmentId") String shipmentId,
-//                                                   @QueryParam("documentName") String documentName) {
-//
-//        byte[] document = transportService.downloadDocument(shipmentId, documentName);
-//        String contentType = null;
-//        try {
-//            contentType = this.detectDocumentType(new ByteArrayInputStream(document));
-//        } catch (IOException ex) {
-//            logger.info("Could not determine file type.");
-//        }
-//
-//        // Fallback to the default content type if type could not be determined
-//        if (contentType == null) {
-//            contentType = "application/octet-stream";
-//        }
-//
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.parseMediaType(contentType))
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documentName + "\"")
-//                .body(document);
-//    }
 
     @GetMapping(value = "/document")
     public byte[] downloadDocument(@RequestParam("address") String address, @RequestParam("shipmentId") String shipmentId,
@@ -121,9 +103,24 @@ public class ShipmentController {
 
 
     @GetMapping(value = "/businessMessage")
-    public ResponseEntity<Resource> downloadBusinessMessage(@RequestParam("shipmentId") String shipmentId,
-                                                            @RequestParam("messageName") String messageName) {
-        return null;
+    public byte[] downloadBusinessMessage(@RequestParam("address") String address, @RequestParam("shipmentId") String shipmentId,
+                                                            @RequestParam("messageName") String messageName) throws IOException {
+        byte[] document = transportService.downloadDocument(address, shipmentId, messageName);
+        logger.debug(String.format("downloaded messageName: %s, from shipment: %s, message size: %d KB",
+                messageName, shipmentId, document.length / 1024));
+        return document;
+    }
+
+    @PostMapping(value="/events")
+    public ResponseEntity<String> subscribeToEvent(@RequestBody SubscribeData data){
+
+        eventsService.saveCallbackUrl(data.getSignature(),data.getEvents().get(0),data.getCallbackUrl());
+
+        logger.debug(String.format("user subscribed to event %s in shipment with url %s", data.getEvents().toString(), data.getCallbackUrl()));
+
+        ResponseEntity entity = new ResponseEntity(String.format("subscription to [shipment: %s , event: %s, callback: %s]" +
+                        " - succeeded!", data.getShipmentId(),data.getEvents(),data.getCallbackUrl() ),HttpStatus.CREATED);
+        return entity;
     }
 
     private String detectDocumentType(InputStream stream) throws IOException {

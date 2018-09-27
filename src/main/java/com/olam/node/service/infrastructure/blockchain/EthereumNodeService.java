@@ -44,6 +44,8 @@ public interface EthereumNodeService {
 
     void registerForShipmentEvent(Observer observer);
 
+    void registerForShipmentEvent(String shipmentId, String address) throws IOException;
+
     void registerForDocumentEvent(Observer observer);
 
     //boolean checkWritePermission(String signature, String shipmentId);
