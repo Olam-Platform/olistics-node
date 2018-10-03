@@ -1,10 +1,15 @@
 package com.olam.node.service.application;
 
+import com.olam.node.service.application.entities.EventData;
 import com.olam.node.service.application.entities.EventType;
 import com.olam.node.service.infrastructure.blockchain.EthereumNodeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import redis.clients.jedis.Jedis;
@@ -24,25 +29,24 @@ public class EventsService {
     @Autowired
     private EthereumNodeService ethereumNode;
 
-    private RestTemplate client;
+    private RestTemplate restTemplate;
 
     @PostConstruct
     public void init() {
         LOG.debug("initializing Events Service");
-        client = new RestTemplate();
+        restTemplate = new RestTemplate();
     }
 
 
     public Long subscribe(String address, EventType event, String url) {
         Long result = jedis.hset(address, event.toString(), url);
 
-
         if (event.equals(EventType.SHIPMENT_CREATED)) {
-//            ethereumNode.registerForShipmentEvent();
+            ethereumNode.registerForShipmentEvent(new EventObserver());
         } else {
-//            ethereumNode.registerForDocumentEvent();
-
+            ethereumNode.registerForDocumentEvent(new EventObserver());
         }
+
         return result;
     }
 
@@ -54,12 +58,24 @@ public class EventsService {
         return jedis.hdel(address, event.toString());
     }
 
-//    private class EventObserver implements Observer{
-//
-//        @Override
-//        public void update(Observable o, Object arg) {
-//
-//        }
-//    }
+    private class EventObserver implements Observer {
 
+        private ResponseEntity<String> postToCallback(EventData data, String url) {
+            //TODO: add more robust headers
+            HttpHeaders requestHeaders = new HttpHeaders();
+            HttpEntity<EventData> requestEntity = new HttpEntity<>(data, requestHeaders);
+            return restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+        }
+
+        @Override
+        public void update(Observable o, Object arg) {
+            if (arg instanceof EventData) {
+                EventData data = (EventData) arg;
+                String url = getSubscription(data.getAddress(), data.getEvent());
+                if (url != null) {
+                    this.postToCallback(data, url);
+                }
+            }
+        }
+    }
 }

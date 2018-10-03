@@ -53,6 +53,4 @@ public class EventsController {
         logger.debug(String.format("user %s deleted subscription to event %s", address,event));
         return new ResponseEntity(String.format("deleted subscription to event %s",event),HttpStatus.ACCEPTED);
     }
-
-
 }
