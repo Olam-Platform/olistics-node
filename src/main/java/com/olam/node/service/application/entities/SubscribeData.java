@@ -13,17 +13,17 @@ public class SubscribeData {
     private String signature;
     private String shipmentId;
     private String callbackUrl;
-    private List<EventType> events;
+    private EventType event;
 
     @JsonCreator
     public SubscribeData(@JsonProperty("signature") String signature,
                          @JsonProperty("shipmentId")String shipmentId,
                          @JsonProperty("callbackUrl")String callbackUrl,
-                         @JsonProperty("events") List<EventType> events) {
+                         @JsonProperty("event") EventType event) {
         this.signature = signature;
         this.shipmentId = shipmentId;
         this.callbackUrl = callbackUrl;
-        this.events = events;
+        this.event = event;
     }
 
     public SubscribeData() {
@@ -53,12 +53,12 @@ public class SubscribeData {
         this.callbackUrl = callbackUrl;
     }
 
-    public List<EventType> getEvents() {
-        return events;
+    public EventType getEvent() {
+        return event;
     }
 
-    public void setEvents(List<EventType> events) {
-        this.events = events;
+    public void setEvent(EventType event) {
+        this.event = event;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class SubscribeData {
                 "signature='" + signature + '\'' +
                 ", shipmentId='" + shipmentId + '\'' +
                 ", callbackUrl='" + callbackUrl + '\'' +
-                ", events=" + events +
+                ", event=" + event +
                 '}';
     }
 }

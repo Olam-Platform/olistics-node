@@ -111,18 +111,6 @@ public class ShipmentController {
         return document;
     }
 
-    @PostMapping(value="/events")
-    public ResponseEntity<String> subscribeToEvent(@RequestBody SubscribeData data){
-
-        eventsService.saveCallbackUrl(data.getSignature(),data.getEvents().get(0),data.getCallbackUrl());
-
-        logger.debug(String.format("user subscribed to event %s in shipment with url %s", data.getEvents().toString(), data.getCallbackUrl()));
-
-        ResponseEntity entity = new ResponseEntity(String.format("subscription to [shipment: %s , event: %s, callback: %s]" +
-                        " - succeeded!", data.getShipmentId(),data.getEvents(),data.getCallbackUrl() ),HttpStatus.CREATED);
-        return entity;
-    }
-
     private String detectDocumentType(InputStream stream) throws IOException {
         Metadata metadata = new Metadata();
         org.apache.tika.mime.MediaType mediaType = detector.detect(stream, metadata);

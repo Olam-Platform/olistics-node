@@ -26,7 +26,7 @@ public class IPFSDataStorageServiceTest {
     @Test
     public void getdataIdentifier() {
         String test = "tomer";
-        ipfsService.getdataIdentifier(test.getBytes());
+        ipfsService.getDataIdentifier(test.getBytes());
     }
 
     @Test
