@@ -48,6 +48,8 @@ public interface EthereumNodeService {
 
     void registerForDocumentEvent(Observer observer);
 
+    String getShipmentStatus(String shipmentId) throws Exception;
+
     //boolean checkWritePermission(String signature, String shipmentId);
 
     //boolean checkWritePermission(Sign.SignatureData signature, String shipmentId);

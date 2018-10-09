@@ -1,6 +1,8 @@
 package com.olam.node.web;
 
+import com.olam.node.exceptions.UBLMessageNotValidException;
 import com.olam.node.service.application.TransportService;
+import com.olam.node.service.application.ValidationService;
 import com.olam.node.service.application.entities.SubscribeData;
 import com.olam.node.service.application.EventsService;
 import org.apache.tika.detect.DefaultDetector;
@@ -15,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -30,6 +33,8 @@ public class ShipmentController {
     private TransportService transportService;
     @Autowired
     private EventsService eventsService;
+    @Autowired
+    private ValidationService validationService;
 
     private Detector detector = new DefaultDetector();
 
@@ -62,10 +67,12 @@ public class ShipmentController {
 
     @PostMapping(value = "/businessMessage", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public String uploadBusinessMessage(@RequestParam("uploadDocumentTransaction") String submitDocumentTransaction,
-                                        @RequestParam("businessMessage") String businessMessage) {
+                                        @RequestParam("businessMessage") String businessMessage) throws FileNotFoundException, UBLMessageNotValidException {
 
         //check user permissions - next phase
+
         //send signed trx to blockchain + document to IPFS
+        boolean isValid = validationService.validateBusinessMessage(businessMessage, "");
         String result = transportService.uploadDocument(submitDocumentTransaction, businessMessage.getBytes());
         logger.info("uploaded document");
         return result;
