@@ -14,8 +14,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Fail.fail;
 
 public class Web3jUtils {
-
-
     private static final BigInteger ACCOUNT_UNLOCK_DURATION = BigInteger.valueOf(30);
 
     private static final int SLEEP_DURATION = 15000;

@@ -1,39 +1,46 @@
-package com.olam.node.integration;
+package olam.node.integration;
 
 import com.olam.node.service.infrastructure.blockchain.EthereumNodeServiceImpl;
 import com.olam.node.service.infrastructure.blockchain.Transport;
+import com.olam.node.service.infrastructure.blockchain.TransportObserverImpl;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.tuples.generated.Tuple4;
+import rx.Subscription;
 
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
+import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 
-public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest {
+public class EthereumNodeServiceImplTest extends OfflineEthereumServiceTest {
     static private EthereumNodeServiceImpl nodeService = null;
+    private final Logger logger = LoggerFactory.getLogger(EthereumNodeServiceImplTest.class);
 
     @BeforeClass
     public static void setup() {
         try {
-            OfflineEthereumServiceImplTest.setup();
+            OfflineEthereumServiceTest.setup();
 
-            nodeService = new EthereumNodeServiceImpl(properties.getProperty(RPC_URL));
+            //nodeService = new EthereumNodeServiceImpl(RPC_URL, GAS_PRICE, GAS_LIMIT, NODE_USR, NODE_PASS);
+            nodeService = new EthereumNodeServiceImpl(RPC_URL, GAS_PRICE, GAS_LIMIT);
 
-            /*
-            if (nodeService.getEtherBalance(shipperCredentials.getAddress()) < 0.25) {
-                nodeService.sendEther(managerCredentials, shipperCredentials.getAddress(), 0.5f);
+            if (nodeService.getEtherBalance(shipperCredentials.getAddress()) < 0.2) {
+                nodeService.sendEther(managerCredentials, shipperCredentials.getAddress(), 1);
             }
-            if (nodeService.getEtherBalance(receiverCredentials.getAddress()) < 0.25) {
-                nodeService.sendEther(managerCredentials, receiverCredentials.getAddress(), 0.5f);
+
+            if (nodeService.getEtherBalance(receiverCredentials.getAddress()) < 0.2) {
+                nodeService.sendEther(managerCredentials, receiverCredentials.getAddress(), 1);
             }
-            */
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -58,6 +65,8 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
     @Test
     public void testLoadContract() {
         try {
+            assertNotNull(lastDeployedContract);
+
             Transport contract = nodeService.loadTransportContract(managerCredentials, lastDeployedContract.getContractAddress());
             assertNotNull(contract);
 
@@ -70,10 +79,14 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
     @Test
     public void testSubmitRequestDoc() {
         try {
+            assertNotNull(lastDeployedContract);
+
             Transport transportContract = nodeService.loadTransportContract(managerCredentials, lastDeployedContract.getContractAddress());
 
             long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
-            List<String> recipients = Arrays.asList(managerCredentials.getAddress(), shipperCredentials.getAddress(), receiverCredentials.getAddress());
+            List<String> recipients = Arrays.asList(
+                    managerCredentials.getAddress(), shipperCredentials.getAddress(), receiverCredentials.getAddress()
+            );
 
             byte[] symmetricKey1 = new byte[32];
             byte[] symmetricKey2 = new byte[32];
@@ -119,8 +132,8 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
 
             for (int i = 0 ; i < 2 ; i++) {
                 BigInteger nonce = nodeService.getNonce(managerCredentials.getAddress());
-                RawTransaction submitDcoTx = nodeService.buildSubmitDocTx(
-                        managerCredentials.getAddress(), contractAddress, DOC_NAME, DOC_URL, recipientsAddresses, keys, msecSinceEpoc, nonce, gasPrice, gasLimit
+                RawTransaction submitDcoTx = nodeService.buildSubmitDocTx(contractAddress, DOC_NAME, DOC_URL, recipientsAddresses, keys, msecSinceEpoc,
+                        nonce, GAS_PRICE, GAS_LIMIT
                 );
 
                 assertNotNull(submitDcoTx);
@@ -149,7 +162,9 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
     @Test
     public void testOfflineRequestDoc() {
         final String DOC_NAME = "Payment request";
-        final String DOC_URL = "some IPFS shit-hash";
+        final String DOC_URL  = "some IPFS shit-hash";
+
+        assertNotNull(lastDeployedContract);
         String contractAddress = lastDeployedContract.getContractAddress();
 
         try {
@@ -172,7 +187,7 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
                         shipperCredentials.getAddress(), contractAddress, DOC_NAME
                 );
 
-                assert (document1.getValue1().equals(DOC_URL));                         // verify url
+                assert (document1.getValue1().equals(DOC_URL));                          // verify url
                 assert (document1.getValue2().intValue() == i);                          // verify version
                 assert (document1.getValue3().equals(managerCredentials.getAddress()));  // verify submitter address
                 assert (document1.getValue4().longValue() == msecSinceEpoc);             // verify timestamp
@@ -185,13 +200,91 @@ public class EthereumNodeServiceImplTest extends OfflineEthereumServiceImplTest 
     }
 
     @Test
+    public void testTransportCreatedEvent() {
+        try {
+            TransportObserverImpl transportObserver = new TransportObserverImpl(shipperCredentials.getAddress());
+            Subscription subscription = nodeService.registerForTransportCreatedEvent(transportObserver);
+
+            Thread waiter = new Thread(() -> {
+                synchronized (transportObserver) {
+                    try {
+                        logger.info(">>>>>> in thread: wait for transport created event");
+                        transportObserver.wait();
+
+                        logger.info(">>>>>> in thread: caught transport created event");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            logger.info(">>>>>> starting thread");
+            waiter.start();
+
+            nodeService.notifyTransport(managerCredentials, shipperCredentials.getAddress(), lastDeployedContract.getContractAddress());
+            logger.info(">>>>>> send Transport notification");
+
+            waiter.join();
+            logger.info(">>>>>> thread is dead");
+
+            subscription.unsubscribe();
+            logger.info(">>>>>> unsubscribed");
+
+            verifyContractInitialState(nodeService.loadTransportContract(managerCredentials, transportObserver.getContractAddress()));
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testTransportEvents() {
+        TransportObserverImpl transportObserver = new TransportObserverImpl(shipperCredentials.getAddress());
+        Subscription subscription = nodeService.registerForTransportEvents(transportObserver);
+
+        try {
+            Thread waiter = new Thread(() -> {
+                synchronized (transportObserver) {
+                    try {
+                        logger.info(">>>>>> in thread: wait for transport created event");
+                        transportObserver.wait();
+
+                        logger.info(">>>>>> in thread: caught transport created event");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            logger.info(">>>>>> starting thread");
+            waiter.start();
+
+            byte[] symmetricKey1 = new byte[32];
+            byte[] symmetricKey2 = new byte[32];
+            byte[] symmetricKey3 = new byte[32];
+            List<byte[]> keys = Arrays.asList(symmetricKey1, symmetricKey2, symmetricKey3);
+
+            lastDeployedContract.submitDocument("My Document", "My document URL", BigInteger.ZERO, Arrays.asList(shipperCredentials.getAddress()), keys);
+
+            logger.info(">>>>>> send Transport notification");
+
+            waiter.join();
+            logger.info(">>>>>> thread is dead");
+
+            subscription.unsubscribe();
+            logger.info(">>>>>> unsubscribed");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
     public void testOfflineDeployContract() {
         try {
             long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
             BigInteger nonce = nodeService.getNonce(managerCredentials.getAddress());
 
             RawTransaction deployTx = nodeService.buildDeployTx(
-                    shipperCredentials.getAddress(), receiverCredentials.getAddress(), msecSinceEpoc, nonce, gasPrice, gasLimit
+                    shipperCredentials.getAddress(), receiverCredentials.getAddress(), msecSinceEpoc, nonce, GAS_PRICE, GAS_LIMIT
             );
             assertNotNull(deployTx);
 

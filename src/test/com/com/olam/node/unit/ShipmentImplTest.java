@@ -22,7 +22,7 @@ public class ShipmentImplTest {
     @Before
     public void setUp() throws Exception {
         properties.load(new FileReader(ResourceUtils.getFile("classpath:application.properties")));
-        String rpcUrl = properties.getProperty("rpcurl.rinkeby.eli");
+        String rpcUrl = properties.getProperty("infura.rinkeby.rpcurl.http");
         shipment = new ShipmentImpl(rpcUrl);
     }
 

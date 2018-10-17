@@ -1,8 +1,8 @@
 package com.olam.node.service.infrastructure.blockchain;
 
 import org.web3j.crypto.Credentials;
-import org.web3j.tuples.generated.Tuple2;
 import org.web3j.tuples.generated.Tuple4;
+import rx.Subscription;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -15,10 +15,8 @@ public interface EthereumNodeService {
 
     BigInteger getNonce(String fromAddress) throws ExecutionException, InterruptedException;
 
-    // deploy a Transport contract
     Transport deployTransportContract(Credentials credentials, String shipperAddress, String receiverAddress, long msecSinceEpoc) throws Exception;
 
-    // load a Transport contract
     Transport loadTransportContract(Credentials credentials, String contractAddress);
 
     void submitDocument(Credentials credentials, String contractAddress, String docName, String docUrl);
@@ -29,10 +27,17 @@ public interface EthereumNodeService {
 
     float getEtherBalance(String accountAddress) throws IOException;
 
-    // sending offline prepared and signed transactions
     String sendDeployTx(String signedTx);
 
     void sendSubmitDocTx(String signedTx);
+
+    void sendMessage(String message, Credentials senderCredentials, String toAddress) throws ExecutionException, InterruptedException;
+
+    void notifyTransport(Credentials senderCredentials, String toAddress, String shipmentContractAddress) throws ExecutionException, InterruptedException;
+
+    Subscription registerForTransportCreatedEvent(TransportObserver transportObserver);
+
+    Subscription registerForTransportEvents(TransportObserver transportObserver);
 
     Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(
             String fromAddress, String contractAddress, String docName
@@ -42,11 +47,9 @@ public interface EthereumNodeService {
             String fromAddress, String contractAddress, String docName, int docVersion
     ) throws IOException;
 
-    void registerForShipmentEvent(Observer observer);
+    //void registerForShipmentEvent(String shipmentId, String address) throws IOException;
 
-    void registerForShipmentEvent(String shipmentId, String address) throws IOException;
-
-    void registerForDocumentEvent(Observer observer);
+    //void registerForDocumentEvent(Observer observer);
 
     //boolean checkWritePermission(String signature, String shipmentId);
 

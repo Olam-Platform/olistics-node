@@ -41,11 +41,13 @@ public class EventsService {
     public Long subscribe(String address, EventType event, String url) {
         Long result = jedis.hset(address, event.toString(), url);
 
+        /*
         if (event.equals(EventType.SHIPMENT_CREATED)) {
             ethereumNode.registerForShipmentEvent(new EventObserver());
         } else {
             ethereumNode.registerForDocumentEvent(new EventObserver());
         }
+        */
 
         return result;
     }

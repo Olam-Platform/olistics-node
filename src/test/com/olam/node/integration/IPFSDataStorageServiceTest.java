@@ -1,4 +1,4 @@
-package com.olam.node.integration;
+package olam.node.integration;
 
 import com.olam.node.service.infrastructure.storage.IPFSDataStorageService;
 import org.junit.Before;
@@ -27,6 +27,7 @@ public class IPFSDataStorageServiceTest {
     public void getdataIdentifier() {
         String test = "tomer";
         ipfsService.getDataIdentifier(test.getBytes());
+        //ipfsService.getdataIdentifier(test.getBytes());
     }
 
     @Test

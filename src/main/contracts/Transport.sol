@@ -8,39 +8,36 @@ contract Transport {
         uint timeStamp;
         address[] recipients;
         mapping(address => bytes32) keys;
-    };
+    }
 
     // constants
-    internal string constant MANAGER_ROLE = "manager";
-    internal string constant SHIPPER_ROLE = "shipper";
-    internal string constant RECEIVER_ROLE = "receiver";
+    string constant MANAGER_ROLE = "manager";
+    string constant SHIPPER_ROLE = "shipper";
+    string constant RECEIVER_ROLE = "receiver";
 
-    internal uint startTime;                             // start time of this contract
-    internal string currentState;                        // current transport state
+    uint startTime;                             // start time of this contract
+    string currentState;                        // current transport state
 
-    internal mapping(string => Document[])   documents;                      // all submitted documents for this transport
-    internal mapping(string => bool)         documentsExist;                 // helper mapping
-    internal mapping(string => address)      roles;                          // all transport roles
-    internal address[]                       addresses;
+    mapping(string => Document[])   documents;                      // all submitted documents for this transport
+    mapping(string => bool)         documentsExist;                 // helper mapping
+    mapping(string => address)      roles;                          // all transport roles
+    address[]                       addresses;
 
 
-    internal mapping(address => string[])    directory;                      //
+    mapping(address => string[])    directory;                      //
 
     // events
     event TransportStarted(uint timeStamp, address indexed recipient);
-    event DocumentSubmitted(string name, uint version, address indexed recipient);
+    event DocumentSubmitted(string name, uint version, address recipient);
     event DocumentRequested(string name, uint version, address submitter);
-    event StateChanged(string previousState, string currentState, string cause, address indexed recipient);
+    event StateChanged(string previousState, string currentState, string cause, address recipient);
 
     event Warn(string message);
 
     constructor(address shipperAddress, address receiverAddress, uint timeStamp) public {
-        roles[MANAGER_ROLE] = msg.sender;
-        // the creator of this Transport
-        roles[SHIPPER_ROLE] = shipperAddress;
-        // the origin of the goods
-        roles[RECEIVER_ROLE] = receiverAddress;
-        // the final destination of the goods
+        roles[MANAGER_ROLE] = msg.sender;       // the creator of this Transport
+        roles[SHIPPER_ROLE] = shipperAddress;   // the origin of the goods
+        roles[RECEIVER_ROLE] = receiverAddress; // the final destination of the goods
 
         addresses.push(roles[MANAGER_ROLE]);
         addresses.push(roles[SHIPPER_ROLE]);
