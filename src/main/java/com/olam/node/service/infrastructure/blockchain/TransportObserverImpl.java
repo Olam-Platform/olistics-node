@@ -9,6 +9,8 @@ public class TransportObserverImpl implements TransportObserver {
     private String fromAddress;
     private String toAddress;
     private BigInteger contractBirthdayBlock = BigInteger.ZERO;
+    boolean eventDetected;
+    Transaction transaction;
 
     public TransportObserverImpl(String notifyAddress) {
         toAddress = notifyAddress;
@@ -37,4 +39,16 @@ public class TransportObserverImpl implements TransportObserver {
 
     @Override
     public void setBirthdayBlock(BigInteger birthdayBlock) { this.contractBirthdayBlock = birthdayBlock; }
+
+    @Override
+    public boolean getEventDetected() {return eventDetected; }
+
+    @Override
+    public void setEventDetected(boolean eventDetected) { this.eventDetected = eventDetected; }
+
+    @Override
+    public void setTransaction(Transaction transaction) { this.transaction = transaction; }
+
+    @Override
+    public Transaction getTransaction() { return transaction; }
 }

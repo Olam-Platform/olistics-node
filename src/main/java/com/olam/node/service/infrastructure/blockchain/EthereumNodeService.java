@@ -11,6 +11,8 @@ import java.util.Observer;
 import java.util.concurrent.ExecutionException;
 
 public interface EthereumNodeService {
+    Object syncObject = new Object();
+
     String createAccount(String password) throws IOException;
 
     BigInteger getNonce(String fromAddress) throws ExecutionException, InterruptedException;
@@ -46,6 +48,8 @@ public interface EthereumNodeService {
     Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(
             String fromAddress, String contractAddress, String docName, int docVersion
     ) throws IOException;
+
+    void waitForEvent(TransportObserver transportObserveralu) throws InterruptedException;
 
     //void registerForShipmentEvent(String shipmentId, String address) throws IOException;
 

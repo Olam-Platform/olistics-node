@@ -1,5 +1,7 @@
 package com.olam.node.service.infrastructure.blockchain;
 
+import org.web3j.protocol.core.methods.response.Transaction;
+
 import java.math.BigInteger;
 
 public interface TransportObserver {
@@ -14,4 +16,11 @@ public interface TransportObserver {
 
     BigInteger getBirthdayBlock();
     void setBirthdayBlock(BigInteger birthdayBlock);
+
+    boolean getEventDetected();
+    void setEventDetected(boolean transportCreated);
+
+    void setTransaction(Transaction transaction);
+
+    Transaction getTransaction();
 }

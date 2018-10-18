@@ -4,14 +4,16 @@ import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.web3j.abi.*;
-import org.web3j.abi.datatypes.*;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.*;
@@ -29,7 +31,6 @@ import java.math.BigInteger;
 import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Observer;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -37,7 +38,6 @@ import static java.lang.Thread.sleep;
 
 public class EthereumNodeServiceImpl extends OfflineEthereumService implements EthereumNodeService {
     private final int WAIT_TX_INTERVAL = 10000;     // in milliseconds
-    private final int RINKEBY_AVERAGE_TX_TIME = 15000;
     private final int WAIT_TX_MAX_TRIES = 10;
     public final String PERSONAL_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n";
     public final String MESSAGE = "RULE THE OLAM";
@@ -158,10 +158,12 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
 
     @Override
     public Subscription registerForTransportCreatedEvent(TransportObserver transportObserver) {
+        transportObserver.setEventDetected(false);
+
         return web3j.transactionObservable().subscribe(transaction -> {
             if(transaction.getTo().equals(transportObserver.getTo())) {
-                synchronized (transportObserver) {
-                    logger.info(">>>>>> received transaction from " + transaction.getFrom() + " to " + transaction.getTo());
+                synchronized (syncObject) {
+                    logger.info(">>>>>> detected Transport-Created from " + transaction.getFrom() + " to " + transaction.getTo());
 
                     transportObserver.setTo(transaction.getTo());
                     transportObserver.setFrom(transaction.getFrom());
@@ -170,7 +172,9 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
                             new String(Hex.decode(transaction.getInput().replace("0x", ""))).replace("shipment:", "")
                     );
 
-                    transportObserver.notify();
+                    transportObserver.setTransaction(transaction);
+
+                    syncObject.notifyAll();
                 }
             }
         });
@@ -185,9 +189,12 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
 
         filter.addSingleTopic(EventEncoder.encode(Transport.DOCUMENTSUBMITTED_EVENT));
 
+        logger.info(">>>>>> in thread: waiting for document submitted event");
         return web3j.ethLogObservable(filter).subscribe(log -> {
             EventValues eventValues = Transport.staticExtractEventParameters(Transport.DOCUMENTSUBMITTED_EVENT, log);
             String recipient = (String)eventValues.getNonIndexedValues().get(1).getValue();
+
+            logger.info(">>>>>> in thread: caught document submitted event");
         });
     }
 
@@ -292,6 +299,17 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
                 (String) callResults.get(2).getValue(),
                 (BigInteger) callResults.get(3).getValue()
         );
+    }
+
+    @Override
+    public void waitForEvent(TransportObserver transportObserver) throws InterruptedException {
+        synchronized (syncObject) {
+            while (!transportObserver.getEventDetected()) {
+                syncObject.wait();
+
+                transportObserver.setEventDetected(true);
+            }
+        }
     }
 
     /*
