@@ -1,4 +1,4 @@
-package olam.node.integration;
+package com.olam.node.integration;
 
 import com.olam.node.service.infrastructure.storage.IPFSDataStorageService;
 import org.junit.Before;

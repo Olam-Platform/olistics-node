@@ -1,4 +1,4 @@
-package olam.node.integration;
+package com.olam.node.integration;
 
 import com.olam.node.service.infrastructure.blockchain.EthereumNodeServiceImpl;
 import com.olam.node.service.infrastructure.blockchain.Transport;
@@ -16,7 +16,6 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 

@@ -1,7 +1,5 @@
 package com.olam.node.service.infrastructure.blockchain;
 
-import org.web3j.protocol.core.methods.response.Transaction;
-
 import java.math.BigInteger;
 
 public class TransportObserverImpl implements TransportObserver {
@@ -14,27 +12,46 @@ public class TransportObserverImpl implements TransportObserver {
         toAddress = notifyAddress;
     }
 
-    @Override
-    public String getFrom() { return fromAddress; }
+    public TransportObserverImpl() { }
+
 
     @Override
-    public void setFrom(String fromAddress) { this.fromAddress = fromAddress; }
+    public String getFrom() {
+        return fromAddress;
+    }
 
     @Override
-    public String getTo() { return toAddress; }
+    public void setFrom(String fromAddress) {
+        this.fromAddress = fromAddress;
+    }
 
     @Override
-    public void setTo(String toAddress) { this.toAddress = toAddress; }
+    public String getTo() {
+        return toAddress;
+    }
 
     @Override
-    public String getContractAddress() { return contractAddress; }
+    public void setTo(String toAddress) {
+        this.toAddress = toAddress;
+    }
 
     @Override
-    public void setContractAddress(String contractAddress) {this.contractAddress = contractAddress; }
+    public String getContractAddress() {
+        return contractAddress;
+    }
 
     @Override
-    public BigInteger getBirthdayBlock() { return contractBirthdayBlock; }
+    public void setContractAddress(String contractAddress) {
+        this.contractAddress = contractAddress;
+    }
 
     @Override
-    public void setBirthdayBlock(BigInteger birthdayBlock) { this.contractBirthdayBlock = birthdayBlock; }
+    public BigInteger getBirthdayBlock() {
+        return contractBirthdayBlock;
+    }
+
+    @Override
+    public void setBirthdayBlock(BigInteger birthdayBlock) {
+        this.contractBirthdayBlock = birthdayBlock;
+    }
 }
