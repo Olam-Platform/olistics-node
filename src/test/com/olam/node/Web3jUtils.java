@@ -1,4 +1,4 @@
-package olam.node;
+package com.olam.node;
 
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.admin.Admin;
@@ -74,7 +74,6 @@ public class Web3jUtils {
     public BigInteger getNonce(String address) throws Exception {
         EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
                 address, DefaultBlockParameterName.LATEST).sendAsync().get();
-
         return ethGetTransactionCount.getTransactionCount();
     }
 }

@@ -12,8 +12,6 @@ import java.util.Properties;
 
 public class ShipmentImplTest {
 
-
-
     private ShipmentImpl shipment;
     private Properties properties = new Properties();
 

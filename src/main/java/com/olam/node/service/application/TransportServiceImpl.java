@@ -19,7 +19,6 @@ public class TransportServiceImpl implements TransportService {
     @Autowired
     private EthereumNodeService ethereumNode;
 
-
     @Override
     public String createShipment(String deployShipmentTransaction) {
 
