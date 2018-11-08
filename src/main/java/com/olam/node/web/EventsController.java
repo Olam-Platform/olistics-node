@@ -30,11 +30,10 @@ public class EventsController {
 
     @PostMapping
     public ResponseEntity<String> createSubscription(@RequestBody SubscribeData data) {
-
         eventsService.subscribe(data.getSignature(), data.getEvent(), data.getCallbackUrl());
         logger.debug(String.format("user subscribed to event %s in shipment %s with url %s", data.getEvent().toString(), data.getShipmentId(), data.getCallbackUrl()));
-        ResponseEntity entity = new ResponseEntity(String.format("subscription to [shipment: %s , event: %s, callback: %s] created" +
-                " - succeeded!", data.getShipmentId(), data.getEvent(), data.getCallbackUrl()), HttpStatus.CREATED);
+        ResponseEntity entity = new ResponseEntity(String.format("subscription to [shipment: %s , event: %s, callback: %s] created"
+                , data.getShipmentId(), data.getEvent(), data.getCallbackUrl()), HttpStatus.CREATED);
         return entity;
     }
 
@@ -50,7 +49,7 @@ public class EventsController {
     @DeleteMapping
     public ResponseEntity<String> deleteSubscription(@RequestParam String address, @RequestParam EventType event) {
         eventsService.deleteSubscription(address, event);
-        logger.debug(String.format("user %s deleted subscription to event %s", address,event));
-        return new ResponseEntity(String.format("deleted subscription to event %s",event),HttpStatus.ACCEPTED);
+        logger.debug(String.format("user %s deleted subscription to event %s", address, event));
+        return new ResponseEntity(String.format("deleted subscription to event %s", event), HttpStatus.ACCEPTED);
     }
 }

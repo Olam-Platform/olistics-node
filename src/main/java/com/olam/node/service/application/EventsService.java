@@ -1,8 +1,11 @@
 package com.olam.node.service.application;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.olam.node.service.application.entities.EventData;
 import com.olam.node.service.application.entities.EventType;
 import com.olam.node.service.infrastructure.blockchain.EthereumNodeService;
+import com.olam.node.service.infrastructure.blockchain.TransportObserverImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import redis.clients.jedis.Jedis;
+import rx.Subscription;
 
 import javax.annotation.PostConstruct;
 import java.util.Observable;
@@ -26,6 +30,7 @@ public class EventsService {
     @Autowired
     private Jedis jedis;
 
+    private ObjectMapper mapper = new ObjectMapper();
     @Autowired
     private EthereumNodeService ethereumNode;
 
@@ -40,16 +45,34 @@ public class EventsService {
 
     public Long subscribe(String address, EventType event, String url) {
         Long result = jedis.hset(address, event.toString(), url);
-
-        /*
+        Subscription subscription = null;
         if (event.equals(EventType.SHIPMENT_CREATED)) {
-            ethereumNode.registerForShipmentEvent(new EventObserver());
+            subscription = this.subscribeToShipmentCreatedEvent(address, url);
         } else {
-            ethereumNode.registerForDocumentEvent(new EventObserver());
+            //todo: add subscription to other events
         }
-        */
+        //todo: save subscription to DB
 
         return result;
+    }
+
+    private Subscription subscribeToShipmentCreatedEvent(String address, String url) {
+        TransportObserverImpl transportObserver = new TransportObserverImpl(address);
+        Subscription subscription = ethereumNode.registerForTransportCreatedEvent(transportObserver);
+
+        Thread waiter = new Thread(() -> {
+            try {
+                LOG.info(">>>>>> in thread: wait for transport created event");
+                ethereumNode.waitForEvent(transportObserver);
+                LOG.info(">>>>>> in thread: caught transport created event");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        waiter.start();
+        LOG.info(">>>>>> starting thread");
+        return subscription;
     }
 
     public String getSubscription(String address, EventType event) {

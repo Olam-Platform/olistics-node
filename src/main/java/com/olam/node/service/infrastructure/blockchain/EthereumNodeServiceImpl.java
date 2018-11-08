@@ -167,13 +167,10 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
 
                     transportObserver.setTo(transaction.getTo());
                     transportObserver.setFrom(transaction.getFrom());
-
                     transportObserver.setContractAddress(
                             new String(Hex.decode(transaction.getInput().replace("0x", ""))).replace("shipment:", "")
                     );
-
                     transportObserver.setTransaction(transaction);
-
                     syncObject.notifyAll();
                 }
             }
@@ -306,7 +303,6 @@ public class EthereumNodeServiceImpl extends OfflineEthereumService implements E
         synchronized (syncObject) {
             while (!transportObserver.getEventDetected()) {
                 syncObject.wait();
-
                 transportObserver.setEventDetected(true);
             }
         }
