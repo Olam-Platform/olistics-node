@@ -2,13 +2,13 @@
 @startuml
 
 actor shipper
-box "Olam Node 1" #LightBlue
-participant "Olam backend 1"
+box "Olistics Node 1" #LightBlue
+participant "Olistics backend 1"
 database "Ethereum Private 1"
 end box
-box "Olam Node 2" #LightBlue
+box "Olistics Node 2" #LightBlue
 database "Ethereum Private 2"
-participant "Olam backend 2"
+participant "Olistics backend 2"
 end box
 actor carrier
 
@@ -18,34 +18,34 @@ title __Create Shipment example__
 'autonumber
 
 == subscription ==
-carrier -> "Olam backend 2" : subscribe to \n Shipment created event
-"Olam backend 2" -> "Ethereum Private 2" : Polling Shipment created event
+carrier -> "Olistics backend 2" : subscribe to \n Shipment created event
+"Olistics backend 2" -> "Ethereum Private 2" : Polling Shipment created event
 
 
 == intialization ==
 shipper -> shipper : Create and sign Shipment trx
-note left: using olam sdk
+note left: using Olistics sdk
 
-shipper -> "Olam backend 1": Create Shipment Request
-activate "Olam backend 1"
+shipper -> "Olistics backend 1": Create Shipment Request
+activate "Olistics backend 1"
 
-"Olam backend 1" -> "Ethereum Private 1" : broadcast signed \n createShipment trx
+"Olistics backend 1" -> "Ethereum Private 1" : broadcast signed \n createShipment trx
 
-"Ethereum Private 1" --> "Olam backend 1" : Transaction Hash
+"Ethereum Private 1" --> "Olistics backend 1" : Transaction Hash
 
-"Olam backend 1" -> "Ethereum Private 1" : Polling Transaction completed
+"Olistics backend 1" -> "Ethereum Private 1" : Polling Transaction completed
 
 "Ethereum Private 1" -> "Ethereum Private 1" : Transaction mined
 
 "Ethereum Private 1" -> "Ethereum Private 2" : ShipmentCreated event
 
 
-"Ethereum Private 2" -> "Olam backend 2" : ShipmentCreated event
+"Ethereum Private 2" -> "Olistics backend 2" : ShipmentCreated event
 
-"Olam backend 2" --> "carrier" : ShipmentCreated event response
+"Olistics backend 2" --> "carrier" : ShipmentCreated event response
 
 
-"Olam backend 1" --> shipper: Create Shipment Response
+"Olistics backend 1" --> shipper: Create Shipment Response
 
 
 

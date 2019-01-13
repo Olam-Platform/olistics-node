@@ -1,7 +1,7 @@
 //package com.olam.node.service.infrastructure;
 //
 //
-//import com.olam.node.service.infrastructure.blockchain.EthereumNodeServiceImpl;
+//import com.olam.node.service.infrastructure.blockchain.EthereumNodeService;
 //import olam.node.Web3jUtils;
 //import org.junit.Before;
 //import org.junit.Test;
@@ -37,7 +37,7 @@
 //    @Autowired
 //    public Environment environment;
 //
-//    private EthereumNodeServiceImpl service;
+//    private EthereumNodeService service;
 //    private Web3j web3j;
 //    private Credentials credentials;
 //    private File transportBIN;
@@ -49,12 +49,12 @@
 //
 //
 //        String url = environment.getProperty("rpc.url.rinkeby");
-//        service = new EthereumNodeServiceImpl(url);
+//        service = new EthereumNodeService(url);
 //        utils = new Web3jUtils(url);
 //
 //        //setup for creating a raw transaction
 //        web3j = Web3j.build(new HttpService(url));
-//        transportBIN = ResourceUtils.getFile("classpath:contracts/Transport.bin");
+//        transportBIN = ResourceUtils.getFile("classpath:contracts/Shipment.bin");
 //        File keystorefile = ResourceUtils.getFile("classpath:accounts/keystore_file01.json");
 //        credentials = WalletUtils.loadCredentials(WALLET_PASSWORD, keystorefile);
 //
@@ -64,7 +64,7 @@
 ////    @Test
 //    public void relaySignedTransaction() throws Exception {
 //
-//        BigInteger nonce = utils.getNonce(credentials.getAddress());
+//        BigInteger nonce = utils.getShipment(credentials.getAddress());
 //
 //        RawTransaction rawTrx = RawTransaction.createContractTransaction(
 //                nonce,

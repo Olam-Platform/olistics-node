@@ -1,6 +1,7 @@
+/*
 package com.olam.node.unit;
 
-import com.olam.node.sdk.ShipmentImpl;
+import com.olam.node.sdk.Shipment;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.util.ResourceUtils;
@@ -11,29 +12,25 @@ import java.io.FileReader;
 import java.util.Properties;
 
 public class ShipmentImplTest {
-
-
-
-    private ShipmentImpl shipment;
+    private Shipment shipment;
     private Properties properties = new Properties();
-
-
 
     @Before
     public void setUp() throws Exception {
         properties.load(new FileReader(ResourceUtils.getFile("classpath:application.properties")));
         String rpcUrl = properties.getProperty("infura.rinkeby.rpcurl.http");
-        shipment = new ShipmentImpl(rpcUrl);
+        shipment = new Shipment(rpcUrl);
     }
 
     @Test
-    public void createShipment() throws Exception {
+    public void testCreateShipment() throws Exception {
         String wallet = WalletUtils.generateLightNewWalletFile("", null);
         Credentials credentials = WalletUtils.loadCredentials("", wallet);
-        String shipmentCreationSignedTrx = this.shipment.createShipment(credentials,
+        String shipmentCreationSignedTrx = this.shipment.testCreateShipment(credentials,
                 "0x28Ac189AA5B4Df9349D55B18622548ae27A58D8a",
                 "0xAecf24415c676ae06DE40DD627c40559aF9C6FAb",
                 "0xED09F036B6Ee0B4177B1e91D69036bC85a357635");
         shipmentCreationSignedTrx.toString();
     }
 }
+*/

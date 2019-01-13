@@ -5,7 +5,7 @@ import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.PublicKey;
 
-public interface CryptoService {
+public interface ICryptoService {
 
     SecretKeySpec generateSymmetricKey(int length, String algorithm);
 

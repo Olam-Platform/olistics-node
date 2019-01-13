@@ -1,7 +1,7 @@
 package olam.node.integration;
 
 import com.olam.node.service.infrastructure.blockchain.OfflineEthereumService;
-import com.olam.node.service.infrastructure.blockchain.Transport;
+import com.olam.node.service.infrastructure.blockchain.ShipmentContract;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.util.ResourceUtils;
@@ -37,7 +37,7 @@ public class OfflineEthereumServiceTest {
     static Credentials shipperCredentials;
     static Credentials receiverCredentials;
 
-    protected Transport lastDeployedContract = null;
+    protected ShipmentContract lastDeployedContract = null;
 
     @BeforeClass
     public static void setup() {
@@ -52,11 +52,7 @@ public class OfflineEthereumServiceTest {
 
             boolean useGanacheCredentials = false;
 
-            if (useGanacheCredentials) {
-                loadGanacheCredentials();
-            } else {
-                loadTestnetCredentials();
-            }
+            loadTestCredentials();
 
             managerCredentials = credentials.get(Integer.parseInt(properties.getProperty("account_id.manager")));
             shipperCredentials = credentials.get(Integer.parseInt(properties.getProperty("account_id.shipper")));
@@ -109,40 +105,32 @@ public class OfflineEthereumServiceTest {
     }
 
     //region helpers
-    private static void loadTestnetCredentials() {
+    private static void loadTestCredentials() {
         try {
-            credentials.add(
-                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file01.json")));
-            credentials.add(
-                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file02.json")));
-            credentials.add(
-                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file03.json")));
-            credentials.add(
-                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file04.json")));
-            credentials.add(
-                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file05.json")));
-            credentials.add(
-                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file06.json")));
-            credentials.add(
-                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file07.json")));
-            credentials.add(
-                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file08.json")));
-            credentials.add(
-                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file09.json")));
-            credentials.add(
-                    WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file10.json")));
+            //rinkeby
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file01.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file02.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file03.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file04.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file05.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file06.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file07.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file08.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file09.json")));
+            credentials.add(WalletUtils.loadCredentials("", ResourceUtils.getFile("classpath:keystore_files/keystore_file10.json")));
+
+            // ganache
+            credentials.add(Credentials.create(properties.getProperty("ganache.privatekey1")));
+            credentials.add(Credentials.create(properties.getProperty("ganache.privatekey2")));
+            credentials.add(Credentials.create(properties.getProperty("ganache.privatekey3")));
+            credentials.add(Credentials.create(properties.getProperty("ganache.privatekey4")));
+            credentials.add(Credentials.create(properties.getProperty("ganache.privatekey5")));
+
         } catch (CipherException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void loadGanacheCredentials() {
-        credentials.add(Credentials.create(properties.getProperty("ganache.privatekey01")));
-        credentials.add(Credentials.create(properties.getProperty("ganache.privatekey02")));
-        credentials.add(Credentials.create(properties.getProperty("ganache.privatekey03")));
-        credentials.add(Credentials.create(properties.getProperty("ganache.privatekey04")));
-        credentials.add(Credentials.create(properties.getProperty("ganache.privatekey05")));
-    }
     private RawTransaction buildDeployTx(String shipperAddress, String receiverAddress, BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit)
     {
         RawTransaction rawTransaction = null;

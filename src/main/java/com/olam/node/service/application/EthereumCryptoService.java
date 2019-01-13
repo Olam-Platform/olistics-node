@@ -4,12 +4,10 @@ package com.olam.node.service.application;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
-import java.security.interfaces.ECPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 
-public class EthereumCryptoService implements CryptoService {
-
+public class EthereumCryptoService implements ICryptoService {
     private Cipher cipher;
 
     @Override

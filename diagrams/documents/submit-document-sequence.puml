@@ -4,21 +4,21 @@
 title __High-Level submit document sequence__
 
 actor user
-box "Olam Node" #LightBlue
-participant "Olam backend"
+box "Olistics Node" #LightBlue
+participant "Olistics backend"
 database "Ethereum Private"
 database "IPFS" #99FF99
 end box
 
-user -> "Olam backend" : submit document request
-"Olam backend" -> "Ethereum Private" : verify permission request
-"Ethereum Private" --> "Olam backend" : verify permission response
-"Olam backend" -> "Olam backend" : encrypt document
-"Olam backend" -> "IPFS" : save document request
-"IPFS" -> "Olam backend" : save document response
-"Olam backend" -> "Ethereum Private" : save document hash + encrypted symmetric key
-"Ethereum Private" --> "Olam backend" : save document hash response
-"Olam backend" --> user : submit document response
+user -> "Olistics backend" : submit document request
+"Olistics backend" -> "Ethereum Private" : verify permission request
+"Ethereum Private" --> "Olistics backend" : verify permission response
+"Olistics backend" -> "Olistics backend" : encrypt document
+"Olistics backend" -> "IPFS" : save document request
+"IPFS" -> "Olistics backend" : save document response
+"Olistics backend" -> "Ethereum Private" : save document hash + encrypted symmetric key
+"Ethereum Private" --> "Olistics backend" : save document hash response
+"Olistics backend" --> user : submit document response
 
 @enduml
 

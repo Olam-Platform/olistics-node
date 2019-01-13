@@ -2,7 +2,7 @@ package com.olam.node.service.application;
 
 import com.olam.node.service.application.entities.EventData;
 import com.olam.node.service.application.entities.EventType;
-import com.olam.node.service.infrastructure.blockchain.EthereumNodeService;
+import com.olam.node.service.infrastructure.blockchain.IEthereumNodeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +20,13 @@ import java.util.Observer;
 
 @Service
 public class EventsService {
-
     private static final Logger LOG = LoggerFactory.getLogger(EventsService.class);
 
     @Autowired
     private Jedis jedis;
 
     @Autowired
-    private EthereumNodeService ethereumNode;
+    private IEthereumNodeService ethereumNode;
 
     private RestTemplate restTemplate;
 

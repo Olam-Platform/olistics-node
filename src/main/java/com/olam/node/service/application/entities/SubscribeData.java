@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Objects;
 
 public class SubscribeData {
-
-
-
     private String signature;
     private String shipmentId;
     private String callbackUrl;
@@ -61,6 +58,7 @@ public class SubscribeData {
         this.event = event;
     }
 
+    /*
     @Override
     public String toString() {
         return "SubscribeData{" +
@@ -70,4 +68,5 @@ public class SubscribeData {
                 ", event=" + event +
                 '}';
     }
+    */
 }

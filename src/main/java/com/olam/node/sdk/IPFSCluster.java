@@ -5,7 +5,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class IPFSCluster {
-
     private final String ID = "id";
     private final String VERSION = "version";
     private final String PINS = "pins";
@@ -58,10 +57,7 @@ public class IPFSCluster {
     }
 
     public class Pins {
-
-
         public ResponseEntity<String> status() {
-
             String uri = buildUri(PINS);
             return restClient.getForEntity(uri, String.class);
         }
@@ -70,7 +66,6 @@ public class IPFSCluster {
             String url = buildUri(PINS, cid);
             return restClient.getForEntity(url, String.class);
         }
-
 
         public ResponseEntity<String> sync() {
             String url = buildUri(PINS, SYNC);
@@ -105,7 +100,6 @@ public class IPFSCluster {
     }
 
     public class Peers {
-
         public ResponseEntity<String> list() {
             String uri = buildUri(PEERS);
             return restClient.getForEntity(uri, String.class);
@@ -118,7 +112,6 @@ public class IPFSCluster {
     }
 
     public class Allocations {
-
         public ResponseEntity<String> list() {
             String uri = buildUri(ALLOCATIONS);
             return restClient.getForEntity(uri, String.class);
@@ -132,7 +125,6 @@ public class IPFSCluster {
     }
 
     public class Health {
-
         public ResponseEntity<String> graph() {
             String uri = buildUri(HEALTH, GRAPH);
             return restClient.getForEntity(uri, String.class);

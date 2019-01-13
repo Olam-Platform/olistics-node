@@ -34,7 +34,7 @@ public class OfflineEthereumService {
         );
 
         // using a regular transaction
-        return RawTransaction.createContractTransaction(nonce, gasPrice, gasLimit, BigInteger.ZERO, "0x" + Transport.BINARY + encodedConstructor);
+        return RawTransaction.createContractTransaction(nonce, gasPrice, gasLimit, BigInteger.ZERO, "0x" + ShipmentContract.BINARY + encodedConstructor);
     }
 
     public static RawTransaction buildSubmitDocTx(
@@ -42,7 +42,7 @@ public class OfflineEthereumService {
             BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit
     ) {
         final Function function = new Function(
-                Transport.FUNC_SUBMITDOCUMENT,
+                ShipmentContract.FUNC_ADDDOCUMENT,
                 Arrays.<Type>asList(
                         new org.web3j.abi.datatypes.Utf8String(docName),
                         new org.web3j.abi.datatypes.Utf8String(docUrl),

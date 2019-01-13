@@ -1,24 +1,26 @@
 package com.olam.node.service.infrastructure.storage;
 
+import com.olam.node.sdk.IPFSCluster;
 import io.ipfs.api.IPFS;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
 import io.ipfs.multihash.Multihash;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
 @Service
-public class IPFSDataStorageService implements DataStorageService {
+public class IPFSService implements IDataStorageService {
+    @Autowired
+    private IPFS        ipfs;
 
     @Autowired
-    private IPFS ipfs;
+    private IPFSCluster ipfsCluster;
 
-//    @Autowired
-//    private IPFSCluster cluster;
+    public IPFSService(IPFS ipfs) {
+        this.ipfs = ipfs;
+    }
 
     @Override
     public String getDataIdentifier(byte[] data) {
@@ -30,7 +32,6 @@ public class IPFSDataStorageService implements DataStorageService {
         return save(file, false);
     }
 
-
     private String save(byte[] data, boolean hashOnly) {
         String hash = null;
 
@@ -38,26 +39,26 @@ public class IPFSDataStorageService implements DataStorageService {
             NamedStreamable.ByteArrayWrapper streamable = new NamedStreamable.ByteArrayWrapper(data);
             MerkleNode addResult = ipfs.add(streamable, false, hashOnly).get(0);
             hash = addResult.hash.toString();
+
             //add support in ipfs cluster
-//            cluster.pins.add(hash);
+            //cluster.pins.add(hash);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         return hash;
     }
 
-
-    public byte[] loadData(String hash) {
+    public byte[] loadData(String url) {
         byte[] dataContents = null;
-        Multihash dataPointer = Multihash.fromBase58(hash);
+        Multihash dataPointer = Multihash.fromBase58(url);
 
         try {
             dataContents = ipfs.cat(dataPointer);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         return dataContents;
     }
-
 }

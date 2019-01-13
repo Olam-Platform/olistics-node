@@ -4,23 +4,51 @@ import org.web3j.protocol.core.methods.response.Transaction;
 
 import java.math.BigInteger;
 
-public interface TransportObserver {
-    String getFrom();
-    void setFrom(String fromAddress);
+public class TransportObserver implements ITransportObserver {
+    private String contractAddress = null;
+    private String fromAddress;
+    private String toAddress;
+    private BigInteger contractBirthdayBlock = BigInteger.ZERO;
+    boolean eventDetected;
+    Transaction transaction;
 
-    String getTo();
-    void setTo(String toAddress);
+    public TransportObserver(String notifyAddress) {
+        toAddress = notifyAddress;
+    }
 
-    String getContractAddress();
-    void setContractAddress(String contractAddress);
+    @Override
+    public String getFrom() { return fromAddress; }
 
-    BigInteger getBirthdayBlock();
-    void setBirthdayBlock(BigInteger birthdayBlock);
+    @Override
+    public void setFrom(String fromAddress) { this.fromAddress = fromAddress; }
 
-    boolean getEventDetected();
-    void setEventDetected(boolean transportCreated);
+    @Override
+    public String getTo() { return toAddress; }
 
-    void setTransaction(Transaction transaction);
+    @Override
+    public void setTo(String toAddress) { this.toAddress = toAddress; }
 
-    Transaction getTransaction();
+    @Override
+    public String getContractAddress() { return contractAddress; }
+
+    @Override
+    public void setContractAddress(String contractAddress) {this.contractAddress = contractAddress; }
+
+    @Override
+    public BigInteger getBirthdayBlock() { return contractBirthdayBlock; }
+
+    @Override
+    public void setBirthdayBlock(BigInteger birthdayBlock) { this.contractBirthdayBlock = birthdayBlock; }
+
+    @Override
+    public boolean getEventDetected() {return eventDetected; }
+
+    @Override
+    public void setEventDetected(boolean eventDetected) { this.eventDetected = eventDetected; }
+
+    @Override
+    public void setTransaction(Transaction transaction) { this.transaction = transaction; }
+
+    @Override
+    public Transaction getTransaction() { return transaction; }
 }
