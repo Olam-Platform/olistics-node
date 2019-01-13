@@ -1,4 +1,4 @@
-package olam.node.integration;
+package com.olam.node.integration;
 
 import com.olam.node.service.infrastructure.blockchain.EthereumNodeService;
 import com.olam.node.service.infrastructure.blockchain.ShipmentContract;
