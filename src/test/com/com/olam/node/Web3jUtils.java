@@ -1,4 +1,4 @@
-package olam.node;
+package com.olam.node;
 
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.admin.Admin;
@@ -20,7 +20,7 @@ public class Web3jUtils {
     private static final int ATTEMPTS = 40;
 
 
-    Admin web3j;
+    private Admin web3j;
 
     public Web3jUtils(String url) {
 
@@ -51,7 +51,7 @@ public class Web3jUtils {
                 sendTransactionReceiptRequest(transactionHash);
         for (int i = 0; i < attempts; i++) {
             if (!receiptOptional.isPresent()) {
-                Thread.sleep(sleepDuration);
+                //Thread.sleep(sleepDuration);
                 receiptOptional = sendTransactionReceiptRequest(transactionHash);
             } else {
                 break;
@@ -72,7 +72,6 @@ public class Web3jUtils {
     public BigInteger getNonce(String address) throws Exception {
         EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
                 address, DefaultBlockParameterName.LATEST).sendAsync().get();
-
         return ethGetTransactionCount.getTransactionCount();
     }
 }
