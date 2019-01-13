@@ -1,6 +1,6 @@
 package com.olam.node.integration;
 
-import com.olam.node.service.infrastructure.storage.IPFSDataStorageService;
+import com.olam.node.service.infrastructure.storage.IPFSService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,7 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class IPFSDataStorageServiceTest {
 
     @Autowired
-    private IPFSDataStorageService ipfsService;
+    private IPFSService ipfsService;
 
     @Before
     public void setUp() throws Exception {
@@ -27,6 +27,7 @@ public class IPFSDataStorageServiceTest {
     public void getdataIdentifier() {
         String test = "tomer";
         ipfsService.getDataIdentifier(test.getBytes());
+        //ipfsService.getdataIdentifier(test.getBytes());
     }
 
     @Test

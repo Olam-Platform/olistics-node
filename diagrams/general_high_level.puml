@@ -1,0 +1,31 @@
+@startuml
+
+title Creating Shipment and notifying collaborators on cargo events
+
+Shipper    -> Olistics : connect(shipper id)
+Carrier    -> Olistics : connect(carrier id)
+Consignee  -> Olistics : connect(consignee id)
+IOT        -> Olistics : connect(iot id)
+
+Shipper    -> Olistics : create_shipment(collaborators = carrier, consignee)
+Olistics   -> Carrier  : notify(shipment_created)
+Olistics   -> Consignee: notify(shipment_created)
+Olistics   -> IOT      : notify(shipment_created)
+
+Shipper    -> Olistics : booking_request(carrier_id)
+Olistics   -> Carrier  : notify(booking request)
+Carrier    -> Olistics : get_document(booking_request)
+Carrier    -> Olistics : booking_confirmation(shipper_id)
+
+Olistics   -> Shipper  : notify(booking_confirmation)
+Shipper    -> Olistics : get_document(booking_confirmation)
+
+
+IOT        -> Olistics : assign_sensors(sensors id, type)
+IOT        -> Olistics : add_sensor_data(location, temperature...)
+
+Olistics   -> Shipper  : alerts(sensor data excursion, location)
+Olistics   -> Carrier  : alerts(sensor data excursion, location)
+Olistics   -> Consignee: alerts(sensor data excursion, location)
+
+@enduml

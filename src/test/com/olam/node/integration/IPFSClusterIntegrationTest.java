@@ -1,4 +1,5 @@
-package com.olam.node.integration;
+/*
+package olam.node.integration;
 
 import com.olam.node.sdk.IPFSCluster;
 import org.junit.Before;
@@ -12,8 +13,6 @@ import java.io.File;
 
 @RunWith(SpringRunner.class)
 public class IPFSClusterIntegrationTest {
-
-
     private IPFSCluster cluster;
     private File file;
 
@@ -45,3 +44,4 @@ public class IPFSClusterIntegrationTest {
     }
 
 }
+*/

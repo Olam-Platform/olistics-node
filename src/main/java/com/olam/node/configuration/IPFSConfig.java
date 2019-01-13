@@ -6,9 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+
 @Configuration
 public class IPFSConfig {
-
     @Value("${ipfs.node.host}")
     private String ipfsNodeHost;
 
@@ -24,16 +24,13 @@ public class IPFSConfig {
     @Value("${ipfs.cluster.port}")
     private int ipfsClusterPort;
 
-
     @Bean
     public IPFS getIPFSDaemon() {
        return new IPFS(ipfsNodeMultiAddr);
     }
 
-
-//    @Bean
-//    public IPFSCluster getIPFSCluster() {
-//        return new IPFSCluster(ipfsClusterHost, ipfsClusterPort);
-//    }
-
+    @Bean
+    public IPFSCluster getIPFSCluster() {
+        return new IPFSCluster(ipfsClusterHost, ipfsClusterPort);
+    }
 }

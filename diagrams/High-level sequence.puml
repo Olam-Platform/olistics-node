@@ -1,16 +1,17 @@
 @startuml
+'idea.disableSyntaxCheck
 
 title __Creating Shipment + booking transportation - high level overview__
 actor shipper as s
-box "Olam Node" #LightBlue
-participant "Olam backend 1" as on1
+box "Olistics Node" #LightBlue
+participant "Olistics backend 1" as on1
 database "Ethereum Private 1" as ep1
 database "IPFS 1" as ip1
 end box
-box "Olam Node" #LightGreen
+box "Olistics Node" #LightGreen
 database "IPFS 2" as ip2
 database "Ethereum Private 2" as ep2
-participant "Olam backend 2" as on2
+participant "Olistics backend 2" as on2
 end box
 actor carrier as c
 

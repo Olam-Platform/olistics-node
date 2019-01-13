@@ -1,8 +1,8 @@
 
 @startuml
 actor user
-box "Olam Node" #LightBlue
-participant "Olam backend" as on
+box "Olistics Node" #LightBlue
+participant "Olistics backend" as on
 database "Ethereum Private" as ep
 end box
 

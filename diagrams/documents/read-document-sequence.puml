@@ -4,8 +4,8 @@
 title __High-Level read document sequence__
 
 actor user
-box "Olam Node" #LightBlue
-participant "Olam backend" as ob
+box "Olistics Node" #LightBlue
+participant "Olistics backend" as ob
 database "Ethereum Private" as ep
 database "IPFS" as ip #99FF99
 end box
