@@ -4,13 +4,12 @@ import org.web3j.protocol.core.methods.response.Transaction;
 
 import java.math.BigInteger;
 
-public class TransportObserver implements ITransportObserver {
-    private String contractAddress = null;
-    private String fromAddress;
-    private String toAddress;
-    private BigInteger contractBirthdayBlock = BigInteger.ZERO;
+public class TransportObserver implements IShipmentObserver {
+    private String  fromAddress;
+    private String  toAddress;
+    Transaction     transaction;
+
     boolean eventDetected;
-    Transaction transaction;
 
     public TransportObserver(String notifyAddress) {
         toAddress = notifyAddress;
@@ -27,18 +26,6 @@ public class TransportObserver implements ITransportObserver {
 
     @Override
     public void setTo(String toAddress) { this.toAddress = toAddress; }
-
-    @Override
-    public String getContractAddress() { return contractAddress; }
-
-    @Override
-    public void setContractAddress(String contractAddress) {this.contractAddress = contractAddress; }
-
-    @Override
-    public BigInteger getBirthdayBlock() { return contractBirthdayBlock; }
-
-    @Override
-    public void setBirthdayBlock(BigInteger birthdayBlock) { this.contractBirthdayBlock = birthdayBlock; }
 
     @Override
     public boolean getEventDetected() {return eventDetected; }

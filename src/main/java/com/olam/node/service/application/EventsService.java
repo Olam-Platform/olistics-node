@@ -1,5 +1,5 @@
 package com.olam.node.service.application;
-
+/*
 import com.olam.node.service.application.entities.EventData;
 import com.olam.node.service.application.entities.EventType;
 import com.olam.node.service.infrastructure.blockchain.IEthereumNodeService;
@@ -23,7 +23,7 @@ public class EventsService {
     private static final Logger LOG = LoggerFactory.getLogger(EventsService.class);
 
     @Autowired
-    private Jedis jedis;
+    private Jedis redisClient;
 
     @Autowired
     private IEthereumNodeService ethereumNode;
@@ -36,31 +36,27 @@ public class EventsService {
         restTemplate = new RestTemplate();
     }
 
-
     public Long subscribe(String address, EventType event, String url) {
-        Long result = jedis.hset(address, event.toString(), url);
+        Long result = redisClient.hset(address, event.toString(), url);
 
-        /*
         if (event.equals(EventType.SHIPMENT_CREATED)) {
             ethereumNode.registerForShipmentEvent(new EventObserver());
         } else {
             ethereumNode.registerForDocumentEvent(new EventObserver());
         }
-        */
 
         return result;
     }
 
     public String getSubscription(String address, EventType event) {
-        return jedis.hget(address, event.toString());
+        return redisClient.hget(address, event.toString());
     }
 
     public Long deleteSubscription(String address, EventType event) {
-        return jedis.hdel(address, event.toString());
+        return redisClient.hdel(address, event.toString());
     }
 
     private class EventObserver implements Observer {
-
         private ResponseEntity<String> postToCallback(EventData data, String url) {
             //TODO: add more robust headers
             HttpHeaders requestHeaders = new HttpHeaders();
@@ -80,3 +76,4 @@ public class EventsService {
         }
     }
 }
+*/

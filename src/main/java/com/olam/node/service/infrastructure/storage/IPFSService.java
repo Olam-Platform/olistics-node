@@ -8,10 +8,11 @@ import io.ipfs.multihash.Multihash;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.ws.rs.NotSupportedException;
 import java.io.IOException;
 
 @Service
-public class IPFSService implements IDataStorageService {
+public class IPFSService implements IStorageService {
     @Autowired
     private IPFS        ipfs;
 
@@ -25,6 +26,11 @@ public class IPFSService implements IDataStorageService {
     @Override
     public String getDataIdentifier(byte[] data) {
         return save(data, true);
+    }
+
+    @Override
+    public void saveTo(byte[] data, String url) {
+        throw new NotSupportedException();
     }
 
     @Override
@@ -49,7 +55,7 @@ public class IPFSService implements IDataStorageService {
         return hash;
     }
 
-    public byte[] loadData(String url) {
+    public byte[] read(String url) {
         byte[] dataContents = null;
         Multihash dataPointer = Multihash.fromBase58(url);
 

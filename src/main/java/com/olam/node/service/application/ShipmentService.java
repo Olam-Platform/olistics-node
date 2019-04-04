@@ -5,23 +5,32 @@ import com.olam.node.service.application.entities.Document;
 import com.olam.node.service.application.entities.Shipment;
 import com.olam.node.service.infrastructure.blockchain.IEthereumNodeService;
 import com.olam.node.service.infrastructure.blockchain.ShipmentContract;
-import com.olam.node.service.infrastructure.storage.IDataStorageService;
+import com.olam.node.service.infrastructure.storage.IDirectoryService;
 import com.olam.node.service.infrastructure.storage.IPFSService;
-import org.apache.commons.net.ftp.FTPClient;
+import com.olam.node.service.infrastructure.storage.IStorageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.tuples.generated.Tuple2;
 import org.web3j.tuples.generated.Tuple3;
+import rx.Subscription;
+
+import java.math.BigInteger;
+
 
 @Service
 public class ShipmentService implements IShipmentService {
-    @Autowired
-    private IDataStorageService     dataStorageService;
+    private static final Logger logger = LoggerFactory.getLogger(ShipmentService.class);
+
+    private IStorageService         dataStorageService;
+
     @Autowired
     private IEthereumNodeService    ethereumNode;
     @Autowired
-    private IPFSService ipfsService;
+    private IPFSService             ipfsService;
 
     public ShipmentService(IEthereumNodeService ethereumNode, IPFSService ipfsService) {
         this.ethereumNode = ethereumNode;
@@ -29,12 +38,15 @@ public class ShipmentService implements IShipmentService {
     }
 
     @Override
-    public String createShipment(Credentials credentials, String shipmentName, Collaborator owner, Collaborator shipper, Collaborator consignee) {
-        String shipmentContractAddress = "";
+    public Tuple2<String, BigInteger> createShipment(Credentials credentials, String shipmentName, Collaborator owner, Collaborator shipper, Collaborator consignee) {
+        Tuple2<String, BigInteger> shipmentProperties = null;
 
         try {
-            ShipmentContract shipmentContract = ethereumNode.deployShipmentContract(credentials, shipmentName, owner, shipper, consignee);
-            shipmentContractAddress = shipmentContract.getContractAddress();
+            Tuple2<ShipmentContract, BigInteger> shipmentTuple2 = ethereumNode.deployShipmentContract(credentials, shipmentName, owner, shipper, consignee);
+            ShipmentContract shipmentContract = shipmentTuple2.getValue1();
+            BigInteger inceptionBlockNumber = shipmentTuple2.getValue2();
+
+            shipmentProperties = new Tuple2(shipmentContract.getContractAddress(), inceptionBlockNumber);
 
             shipmentContract.updateCollaborator(owner.Address(), owner.Name(), owner.Role()).sendAsync();
             shipmentContract.updateCollaborator(shipper.Address(), shipper.Name(), shipper.Role()).sendAsync();
@@ -43,12 +55,12 @@ public class ShipmentService implements IShipmentService {
             e.printStackTrace();
         }
 
-        return shipmentContractAddress;
+        return shipmentProperties;
     }
 
     @Override
-    public Shipment getShipment(Credentials credentials, String shipmentContractAddress) throws Exception {
-        ShipmentContract shipmentContract = ethereumNode.loadShipmentContract(credentials, shipmentContractAddress);
+    public Shipment getShipment(Credentials credentials, String shipmentId) throws Exception {
+        ShipmentContract shipmentContract = ethereumNode.loadShipmentContract(credentials, shipmentId);
 
         String contractState = shipmentContract.getState().send();
         String shipmentName = shipmentContract.getName().send();
@@ -58,74 +70,67 @@ public class ShipmentService implements IShipmentService {
         Tuple3<String, String, String> consignee = shipmentContract.getCollaboratorByRole(IShipmentService.CONSIGNEE_ROLE).send();
 
         Collaborator[] collaborators = new Collaborator[] {
-                new Collaborator(owner.getValue1(), owner.getValue2(), owner.getValue3()),
-                new Collaborator(shipper.getValue1(), shipper.getValue2(), shipper.getValue3()),
-                new Collaborator(consignee.getValue1(), consignee.getValue2(), consignee.getValue3())
+                new Collaborator(owner.getValue3(), owner.getValue1(), owner.getValue2()),
+                new Collaborator(shipper.getValue3(), shipper.getValue1(), shipper.getValue2()),
+                new Collaborator(consignee.getValue3(), consignee.getValue1(), consignee.getValue2())
         };
 
         return new Shipment(shipmentName, contractState, collaborators);
     }
 
     @Override
-    public boolean addDocument(Credentials credentials, Document document, String shipmentContractAddress) throws Exception  {
-        ShipmentContract shipmentContract = ethereumNode.loadShipmentContract(credentials, shipmentContractAddress);
+    public boolean addDocument(Credentials credentials, String shipmentId, Document document) throws Exception  {
+        ShipmentContract shipmentContract = ethereumNode.loadShipmentContract(credentials, shipmentId);
 
-        /*
-        FTPClient ftpClient = new FTPClient();
-        ftpClient.connect();
-        String url = ipfsService.save("file saved to ipfs".getBytes());
-        document.Url(url);
-        */
-        TransactionReceipt txReceipt = shipmentContract.addDocument(document.Name(), document.Url().toString(), document.Collaborators()[0].Address()).send();
+        dataStorageService = IStorageService.getDataStorageService(document.Url());
 
-        return txReceipt.isStatusOK();
-    }
+        assert(!dataStorageService.equals(null));
 
-    @Override
-    public boolean updateDocument(Credentials credentials, Document document, String shipmentContractAddress) throws Exception {
-        ShipmentContract shipmentContract = ethereumNode.loadShipmentContract(credentials, shipmentContractAddress);
-        TransactionReceipt txReceipt = shipmentContract.updateDocument(document.Name(), document.Url().toString()).send();
+        // read document from user's storage
+        byte[] fileBytes = dataStorageService.read(document.Url());
+
+        // store document in IPFS
+        document.Url(ipfsService.save(fileBytes));
+
+        // update document's url to be the IPFS hash
+        TransactionReceipt txReceipt = shipmentContract.addDocument(document.Name(), document.Url(), document.Collaborator().Address()).send();
 
         return txReceipt.isStatusOK();
     }
 
     @Override
-    public String getDocument(Credentials credentials, String shipmentContractAddress, String docName) throws Exception {
-        ShipmentContract shipmentContract = ethereumNode.loadShipmentContract(credentials, shipmentContractAddress);
-        String documentUrl = shipmentContract.getDocumentUrl(docName).send();
+    public boolean updateDocument(Credentials credentials, String shipmentId, String docName, String clientUrl) throws Exception {
+        ShipmentContract shipmentContract = ethereumNode.loadShipmentContract(credentials, shipmentId);
+        TransactionReceipt txReceipt = shipmentContract.updateDocument(docName, clientUrl).send();
 
-        return documentUrl;
-    }
-
-    //region unused
-    /*
-    @Override
-    public String getDocumentId(byte[] document) {
-        return dataStorageService.getDataIdentifier(document);
+        return txReceipt.isStatusOK();
     }
 
     @Override
-    public String uploadDocument(String submitDocumentTransaction, byte[] document) {
-        String documentHash = dataStorageService.save(document);
-        ethereumNode.sendSubmitDocTx(submitDocumentTransaction);
+    public Document getDocument(Credentials credentials, String shipmentId, String docName, String docClientUrl) throws Exception {
+        ShipmentContract shipmentContract = ethereumNode.loadShipmentContract(credentials, shipmentId);
 
-        return documentHash;
+        Tuple3<String, String, String> documentAttributes = shipmentContract.getDocument(docName).send();
+        String ipfsDocHash = documentAttributes.getValue1();
+        String ownerAddress = documentAttributes.getValue2();
+        String collaboratorAddress = documentAttributes.getValue3();
+
+
+        byte[] fileBytes = ipfsService.read(ipfsDocHash);
+
+        dataStorageService = IStorageService.getDataStorageService(docClientUrl);
+        dataStorageService.saveTo(fileBytes, docClientUrl);
+
+        Collaborator owner = new Collaborator(ownerAddress);
+        Collaborator collaborator = new Collaborator(collaboratorAddress);
+
+        return new Document(docName, docClientUrl, owner, collaborator);
     }
 
     @Override
-    public byte[] downloadDocument(String fromAddress, String shipmentId, String documentName) throws IOException {
-        byte[] data = null;
-        Tuple4<String, BigInteger, String, BigInteger> documentMetaData = ethereumNode.sendRequestDocCall(fromAddress, shipmentId, documentName);
-        if (documentMetaData != null) {
-            data = dataStorageService.loadData(documentMetaData.getValue1());
-        }
+    public boolean observe(String shipmentId, BigInteger blockNumber, IDirectoryService directoryService) {
+        Subscription subscription = ethereumNode.registerForShipmentEvents(shipmentId, blockNumber);
 
-        return data;
+        return true;
     }
-
-    public BigInteger getNonce(String address) throws ExecutionException, InterruptedException {
-        return ethereumNode.getNonce(address);
-    }
-    */
-    //endregion
 }

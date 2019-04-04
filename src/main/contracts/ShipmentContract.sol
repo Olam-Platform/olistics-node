@@ -38,7 +38,7 @@ contract ShipmentContract {
     mapping(string  => Document)        documents;          // maps document names to documents
 
     // events
-    event DocumentEvent(string name, string url, DocumentEventEnum docEvent, address trigerredBy);
+    event DocumentEvent(string name, string url, DocumentEventEnum docEvent, address trigerredBy, address collaboratorAddress);
     event StateChanged(string oldState, string state, address changedBy);
     event CollaboratorAdded(string name, string role, address publicAddress);
     event Warn(string message);
@@ -92,25 +92,27 @@ contract ShipmentContract {
 
         documents[name] = document;
 
-        emit DocumentEvent(name, url, DocumentEventEnum.DocumentAdded, msg.sender);
+        emit DocumentEvent(name, url, DocumentEventEnum.DocumentAdded, msg.sender, collaboratorAddress);
     }
 
     // update a document
     function updateDocument(string memory name, string memory url) public onlyByCollaborator {
         require(documentExists(name), "document does not exist, use addDocument to submit a new document");
+        require(documents[name].owner == msg.sender, "only the document owner can update it");
 
         documents[name].url = url;
 
-        emit DocumentEvent(name, url, DocumentEventEnum.DocumentUpdated, msg.sender);
+        emit DocumentEvent(name, url, DocumentEventEnum.DocumentUpdated, msg.sender, documents[name].collaboratorAddress);
     }
 
     // request a document locator
-    function getDocumentUrl(string memory name) public view onlyByCollaborator returns(string memory url){
+    function getDocument(string memory name) public view onlyByCollaborator returns(string memory url, address owner, address collaborator) {
         require(documentExists(name), "unknown document requested");
+        require(documents[name].owner == msg.sender || documents[name].collaboratorAddress == msg.sender, "only owner or collaborator may access this document");
 
-        //emit DocumentEvent(name, documents[name].url, DocumentEventEnum.DocumentRequested, msg.sender);
+        //emit DocumentEvent(name, documents[name].url, DocumentEventEnum.DocumentRequested, msg.sender, documents[name].collaboratorAddress);
 
-        return documents[name].url;
+        return (documents[name].url, documents[name].owner, documents[name].collaboratorAddress);
     }
 
     // does not validate state transitions
@@ -131,7 +133,7 @@ contract ShipmentContract {
     }
 
     function addCollaborator(string memory name, string memory role, address collaboratorAddress) onlyByOwner public {
-        require(collaborators[collaboratorAddress].isValid == false);                       // collaborator does not exist
+        require(roles[role].isValid == false, "the new collaborator must have a new role");
         Collaborator memory newCollaborator;
 
         newCollaborator.name = name;
@@ -166,12 +168,12 @@ contract ShipmentContract {
     }
 
     modifier onlyByCollaborator() {
-        require(collaborators[msg.sender].isValid);
+        require(collaborators[msg.sender].isValid, "unauthorised. not a collaborator to this shipment");
         _;
     }
 
     modifier onlyByOwner() {
-        require(msg.sender == roles[OWNER_ROLE].publicAddress);
+        require(msg.sender == roles[OWNER_ROLE].publicAddress, "unauthorised. not the shipment owner");
         _;
     }
 

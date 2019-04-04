@@ -1,7 +1,6 @@
 package com.olam.node.service.infrastructure.blockchain;
 
 import com.olam.node.service.application.entities.Collaborator;
-import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.web3j.abi.*;
@@ -20,6 +19,7 @@ import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.protocol.websocket.WebSocketService;
+import org.web3j.tuples.generated.Tuple2;
 import org.web3j.tuples.generated.Tuple4;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
@@ -38,6 +38,8 @@ import java.util.concurrent.ExecutionException;
 import static java.lang.Thread.sleep;
 
 public class EthereumNodeService extends OfflineEthereumService implements IEthereumNodeService {
+    private static final Logger logger = LoggerFactory.getLogger(EthereumNodeService.class);
+
     private final int WAIT_TX_INTERVAL = 10000;     // in milliseconds
     private final int WAIT_TX_MAX_TRIES = 10;
     public final String PERSONAL_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n";
@@ -48,8 +50,6 @@ public class EthereumNodeService extends OfflineEthereumService implements IEthe
 
     private final Web3j web3j;
     private final Admin ethAdmin;
-
-    private final Logger logger = LoggerFactory.getLogger(EthereumNodeService.class);
 
     public EthereumNodeService(String rpcUrl, BigInteger gasPrice, BigInteger gasLimit) throws ConnectException {
         this.gasPrice = gasPrice;
@@ -71,8 +71,8 @@ public class EthereumNodeService extends OfflineEthereumService implements IEthe
         }
     }
 
+    // region Kaleido code
     /*
-    // to be used with Kaleido
     public EthereumNodeService(String rpcUrl, BigInteger gasPrice, BigInteger gasLimit, String user, String password) {
         this.gasPrice = gasPrice;
         this.gasLimit = gasLimit;
@@ -89,9 +89,10 @@ public class EthereumNodeService extends OfflineEthereumService implements IEthe
         ethAdmin = Admin.build(service);
     }
     */
+    // endregion
 
     @Override
-    public ShipmentContract deployShipmentContract(
+    public Tuple2<ShipmentContract, BigInteger> deployShipmentContract(
             Credentials credentials, String shipmentName, Collaborator owner, Collaborator shipper, Collaborator consignee
     ) throws Exception {
         ShipmentContract shipmentContract = ShipmentContract.deploy(
@@ -99,7 +100,10 @@ public class EthereumNodeService extends OfflineEthereumService implements IEthe
                 shipmentName, owner.Name(), shipper.Address(), shipper.Name(), consignee.Address(), consignee.Name()
         ).send();
 
-        return shipmentContract;
+        String txHAsh = shipmentContract.getTransactionReceipt().get().getTransactionHash();
+        BigInteger blockNumber = web3j.ethGetTransactionByHash(txHAsh).send().getTransaction().get().getBlockNumber();
+
+        return new Tuple2<>(shipmentContract, blockNumber);
     }
 
     @Override
@@ -156,69 +160,39 @@ public class EthereumNodeService extends OfflineEthereumService implements IEthe
     }
 
     @Override
-    public void notifyTransport(
-            Credentials senderCredentials, String toAddress, String shipmentContractAddress
-    ) throws ExecutionException, InterruptedException {
+    public void notifyTransport(Credentials senderCredentials, String toAddress, String shipmentContractAddress) throws ExecutionException, InterruptedException {
         sendMessage("shipment:" + shipmentContractAddress, senderCredentials, toAddress);
     }
 
     @Override
-    public Subscription registerForTransportCreatedEvent(ITransportObserver transportObserver) {
-        transportObserver.setEventDetected(false);
-
-        return web3j.transactionObservable().subscribe(transaction -> {
-            if(transaction.getTo().equals(transportObserver.getTo())) {
-                synchronized (syncObject) {
-                    logger.info(">>>>>> detected Transport-Created from " + transaction.getFrom() + " to " + transaction.getTo());
-
-                    transportObserver.setTo(transaction.getTo());
-                    transportObserver.setFrom(transaction.getFrom());
-
-                    transportObserver.setContractAddress(
-                            new String(Hex.decode(transaction.getInput().replace("0x", ""))).replace("shipment:", "")
-                    );
-
-                    transportObserver.setTransaction(transaction);
-
-                    syncObject.notifyAll();
-                }
-            }
-        });
-    }
-
-    @Override
-    public Subscription registerForTransportEvents(ITransportObserver transportObserver) {
-        EthFilter filter = new EthFilter(
-                DefaultBlockParameter.valueOf(transportObserver.getBirthdayBlock()), DefaultBlockParameterName.LATEST,
-                transportObserver.getContractAddress()
-        );
-
+    public Subscription registerForShipmentEvents(String shipmentContractAddress, BigInteger inceptionBlockNumber) {
+        //EthFilter filter = new EthFilter(DefaultBlockParameter.valueOf(inceptionBlockNumber), DefaultBlockParameterName.LATEST, shipmentContractAddress);
+        EthFilter filter = new EthFilter(DefaultBlockParameterName.EARLIEST, DefaultBlockParameterName.LATEST, shipmentContractAddress);
         filter.addSingleTopic(EventEncoder.encode(ShipmentContract.DOCUMENTEVENT_EVENT));
 
-        logger.info(">>>>>> in thread: waiting for document submitted event");
         return web3j.ethLogObservable(filter).subscribe(log -> {
             EventValues eventValues = ShipmentContract.staticExtractEventParameters(ShipmentContract.DOCUMENTEVENT_EVENT, log);
-            String recipient = (String)eventValues.getNonIndexedValues().get(1).getValue();
+            String docName = (String)eventValues.getNonIndexedValues().get(0).getValue();
+            String ipfsHash = (String)eventValues.getNonIndexedValues().get(1).getValue();
+            int eventType = ((BigInteger)eventValues.getNonIndexedValues().get(2).getValue()).intValue();
+            String sender = (String)eventValues.getNonIndexedValues().get(3).getValue();
+            String collaborator = (String)eventValues.getNonIndexedValues().get(4).getValue();
 
-            logger.info(">>>>>> in thread: caught document submitted event");
+            logger.info(docName + " at ipfs  hash " + ipfsHash + " submitted by " + sender + " to " + collaborator);
         });
     }
 
     //get document with ethereum signatures
-    public Tuple4<String, BigInteger, String, BigInteger> requestDocument(
-            String signature, String contractAddress, String docName
-    ) throws IOException {
+    public Tuple4<String, BigInteger, String, BigInteger> requestDocument(String signature, String contractAddress, String docName) throws IOException {
         BigInteger publicKey = this.getPublicKey(signature);
         String address = Keys.getAddress(publicKey);
         return sendRequestDocCall(address, contractAddress, docName);
     }
 
     @Override
-    public Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(
-            String fromAddress, String contractAddress, String docName
-    ) throws IOException {
+    public Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(String fromAddress, String contractAddress, String docName) throws IOException {
         final Function function = new Function(
-                ShipmentContract.FUNC_GETDOCUMENTURL,
+                ShipmentContract.FUNC_GETDOCUMENT,
                 Arrays.<Type>asList(new Utf8String(docName)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {
                 }, new TypeReference<Uint256>() {
@@ -280,11 +254,9 @@ public class EthereumNodeService extends OfflineEthereumService implements IEthe
     // endregion
 
     @Override
-    public Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(
-            String fromAddress, String contractAddress, String docName, int docVersion
-    ) throws IOException {
+    public Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(String fromAddress, String contractAddress, String docName, int docVersion) throws IOException {
         Function function = new Function(
-                ShipmentContract.FUNC_GETDOCUMENTURL,
+                ShipmentContract.FUNC_GETDOCUMENT,
                 Arrays.<Type>asList(new Utf8String(docName), new Uint256(docVersion)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Utf8String>() {
                 }, new TypeReference<Uint256>() {
@@ -308,7 +280,7 @@ public class EthereumNodeService extends OfflineEthereumService implements IEthe
     }
 
     @Override
-    public void waitForEvent(ITransportObserver transportObserver) throws InterruptedException {
+    public void waitForEvent(IShipmentObserver transportObserver) throws InterruptedException {
         synchronized (syncObject) {
             while (!transportObserver.getEventDetected()) {
                 syncObject.wait();
@@ -317,27 +289,6 @@ public class EthereumNodeService extends OfflineEthereumService implements IEthe
             }
         }
     }
-
-    /*
-    @Override
-    public void registerForShipmentEvent(String shipmentId, String address) throws IOException {
-        Event event = new Event("Notify", Arrays.asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
-        String encodedEventSignature = "TransportStarted";
-
-        EthFilter filter = new EthFilter(
-                DefaultBlockParameterName.EARLIEST,DefaultBlockParameterName.LATEST, shipmentId
-        ).addSingleTopic(encodedEventSignature);
-
-        EthLog log = web3j.ethGetLogs(filter).send();
-        List<EthLog.LogResult> logs = log.getLogs();
-    }
-    */
-
-    /*
-    @Override
-    public void registerForDocumentEvent(Observer observer) {
-    }
-    */
 
     public TransactionReceipt sendTx(String tx) {
         EthSendTransaction ethSendTransaction;
@@ -399,8 +350,7 @@ public class EthereumNodeService extends OfflineEthereumService implements IEthe
         return null;
     }
 
-    private Optional<TransactionReceipt> getTransactionReceipt(
-            String transactionHash, int sleepDuration, int attempts) throws Exception {
+    private Optional<TransactionReceipt> getTransactionReceipt(String transactionHash, int sleepDuration, int attempts) throws Exception {
 
         Optional<TransactionReceipt> receiptOptional =
                 sendTransactionReceiptRequest(transactionHash);
@@ -416,8 +366,7 @@ public class EthereumNodeService extends OfflineEthereumService implements IEthe
         return receiptOptional;
     }
 
-    private Optional<TransactionReceipt> sendTransactionReceiptRequest(
-            String transactionHash) throws Exception {
+    private Optional<TransactionReceipt> sendTransactionReceiptRequest(String transactionHash) throws Exception {
         EthGetTransactionReceipt transactionReceipt =
                 web3j.ethGetTransactionReceipt(transactionHash).sendAsync().get();
 

@@ -21,14 +21,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 
-public class EthereumNodeServiceTest extends OfflineEthereumServiceTest {
+public class EthereumNodeServiceTest extends com.olam.node.integration.OfflineEthereumServiceTest {
     static private EthereumNodeService nodeService = null;
     private final Logger logger = LoggerFactory.getLogger(EthereumNodeServiceTest.class);
 
     @BeforeClass
     public static void setup() {
         try {
-            OfflineEthereumServiceTest.setup();
+            com.olam.node.integration.OfflineEthereumServiceTest.setup();
 
             //nodeService = new EthereumNodeService(RPC_URL, GAS_PRICE, GAS_LIMIT, NODE_USR, NODE_PASS);
             nodeService = new EthereumNodeService(RPC_URL, GAS_PRICE, GAS_LIMIT);
@@ -46,15 +46,13 @@ public class EthereumNodeServiceTest extends OfflineEthereumServiceTest {
         }
     }
 
-    /*
     @Before
     public void deployContract() {
         try {
-            long msecSinceEpoc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
+            /*
             lastDeployedContract = nodeService.deployShipmentContract(
-                    managerCredentials, shipperCredentials.getAddress(), receiverCredentials.getAddress(),
-            );
-
+                    managerCredentials, shipperCredentials.getAddress(), receiverCredentials.getAddress(),            );
+            */
             assertNotNull(lastDeployedContract);
             logger.info(">>>>>> deployed contract " + lastDeployedContract.getContractAddress());
 
@@ -63,7 +61,6 @@ public class EthereumNodeServiceTest extends OfflineEthereumServiceTest {
             e.printStackTrace();
         }
     }
-    */
 
     @Test
     public void testLoadContract() {
@@ -97,7 +94,7 @@ public class EthereumNodeServiceTest extends OfflineEthereumServiceTest {
             List<byte[]> keys = Arrays.asList(symmetricKey1, symmetricKey2, symmetricKey3);
 
             transportContract.addDocument("AirwayBill", "AirwayBill hash from IPFS", receiverCredentials.getAddress()).send();
-            transportContract.getDocumentUrl("AirwayBill").send();
+            transportContract.getDocument("AirwayBill").send();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -180,84 +177,7 @@ public class EthereumNodeServiceTest extends OfflineEthereumServiceTest {
     }
 
     @Test
-    public void testTransportCreatedEvent() {
-        try {
-            TransportObserver transportObserver = new TransportObserver(shipperCredentials.getAddress());
-            Subscription subscription = nodeService.registerForTransportCreatedEvent(transportObserver);
-
-            Thread waiter = new Thread(() -> {
-                try {
-                    logger.info(">>>>>> in thread: wait for transport created event");
-                    nodeService.waitForEvent(transportObserver);
-
-                    logger.info(">>>>>> in thread: caught transport created event");
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
-
-            logger.info(">>>>>> starting thread");
-            waiter.start();
-
-            nodeService.notifyTransport(managerCredentials, shipperCredentials.getAddress(), lastDeployedContract.getContractAddress());
-            logger.info(">>>>>> send Transport notification");
-
-            waiter.join();
-            logger.info(">>>>>> thread is dead");
-
-            subscription.unsubscribe();
-            logger.info(">>>>>> unsubscribed");
-
-            Transaction tx = transportObserver.getTransaction();
-
-            verifyContractInitialState(nodeService.loadShipmentContract(managerCredentials, transportObserver.getContractAddress()));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
     public void testTransportEvents() {
-        TransportObserver transportObserver = new TransportObserver(shipperCredentials.getAddress());
-        transportObserver.setContractAddress(lastDeployedContract.getContractAddress());
-
-        Subscription subscription = nodeService.registerForTransportEvents(transportObserver);
-
-        try {
-            Thread waiter = new Thread(() -> {
-                    try {
-                        logger.info(">>>>>> in thread: wait for document submitted event");
-                        nodeService.waitForEvent(transportObserver);
-
-                        logger.info(">>>>>> in thread: caught document submitted event");
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-            });
-
-            logger.info(">>>>>> starting thread");
-            waiter.start();
-
-            byte[] symmetricKey1 = new byte[32];
-            byte[] symmetricKey2 = new byte[32];
-            byte[] symmetricKey3 = new byte[32];
-            List<byte[]> keys = Arrays.asList(symmetricKey1, symmetricKey2, symmetricKey3);
-
-
-            lastDeployedContract.addDocument("My Document", "My document URL", shipperCredentials.getAddress());
-
-            logger.info(">>>>>> document submitted");
-
-            waiter.join();
-            logger.info(">>>>>> thread is dead");
-
-            subscription.unsubscribe();
-            logger.info(">>>>>> unsubscribed");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     @Test

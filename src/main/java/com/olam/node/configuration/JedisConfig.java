@@ -7,12 +7,11 @@ import redis.clients.jedis.Jedis;
 
 @Configuration
 public class JedisConfig {
-    @Value("${redis.host}")
+    @Value("${redis.host}:${redis.port}")
     private String host;
 
     @Bean
     public Jedis getRedisClient() {
         return new Jedis(host);
     }
-
 }

@@ -5,6 +5,8 @@ import com.olam.node.service.application.entities.Document;
 import com.olam.node.service.application.entities.Shipment;
 import com.olam.node.service.infrastructure.blockchain.EthereumNodeService;
 import com.olam.node.service.infrastructure.blockchain.IEthereumNodeService;
+import com.olam.node.service.infrastructure.storage.DirectoryService;
+import com.olam.node.service.infrastructure.storage.IDirectoryService;
 import com.olam.node.service.infrastructure.storage.IPFSService;
 import com.olam.node.web.ShipmentsController;
 import io.ipfs.api.IPFS;
@@ -17,7 +19,6 @@ import org.web3j.tx.exceptions.ContractCallException;
 
 import java.math.BigInteger;
 import java.net.ConnectException;
-import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -28,6 +29,7 @@ public class ShipmentServiceTest {
     private String shipperAddress   = "0x702337329C0A73986D99510A0E937AfB0c9fF5Ad";
     private String consigneeAddress = "0x03CBD79019Bdbaf54d225859d8385983f5b25639";
     private String anonymAddress    = "0x2de3c14A2207a6C6295CCFc422ce56De5D5a17CC";
+
     private static String ganacheNodeUrl   = "http://127.0.0.1:7545";
     private static String ipfsNodeAddr     = "/dnsaddr/ipfs.infura.io/tcp/5001/https";
 
@@ -37,14 +39,14 @@ public class ShipmentServiceTest {
     private String SHIPMENT_NAME    = " Jamaican Weed";
 
     private static IShipmentService shipmentService;
-    private static ICredentialsService credentialsService;
+    private static IDirectoryService credentialsService;
     private static IEthereumNodeService ethereumNodeService;
 
-    private static final Logger logger = LoggerFactory.getLogger(ShipmentsController.class);
+    private static final Logger logger = LoggerFactory.getLogger(ShipmentServiceTest.class);
 
     @BeforeClass
     public static void setUp() {
-        credentialsService = new CredentialsService();
+        credentialsService = new DirectoryService();
 
         try {
             ethereumNodeService = new EthereumNodeService(ganacheNodeUrl, gasPrice, gasLimit);
@@ -56,6 +58,7 @@ public class ShipmentServiceTest {
         shipmentService = new ShipmentService(ethereumNodeService, ipfsService);
     }
 
+    /*
     @Test
     public void testCreateShipment() {
         Collaborator owner = new Collaborator("Owner", "owner", ownerAddress);
@@ -100,17 +103,16 @@ public class ShipmentServiceTest {
 
         String shipmentContractAddress = createShipment(SHIPMENT_NAME, owner, shipper, consignee);
 
-        Collaborator[] collaborators = new Collaborator[]{shipper};
-
         try {
-            Document document = new Document(DOC_NAME,  new URL("c:\\Users\\Eli\\Documents\\"), owner, collaborators);
+            Document document = new Document(DOC_NAME,"C:\\tmp\\olam-node\\pom.xml", owner, shipper);
 
-            boolean docAdded = shipmentService.addDocument(credentialsService.getCredentials(owner.Address(), ""), document, shipmentContractAddress);
+            boolean docAdded = shipmentService.submitDocument(credentialsService.getCredentials(owner.Address(), ""), shipmentContractAddress, document);
             assertTrue(docAdded);
 
-            String ipfsHAsh = shipmentService.getDocument(credentialsService.getCredentials(shipper.Address(), ""), shipmentContractAddress, DOC_NAME);
-            logger.info("ipfs hash for " + DOC_NAME + " is " + ipfsHAsh);
+            Credentials shipperCredentials = credentialsService.getCredentials(shipper.Address(), "");
+            Document ipfsDoc = shipmentService.requestDocument(shipperCredentials, shipmentContractAddress, DOC_NAME, "c:\\tmp\\olam-node\\pom.xml.ipfs");
 
+            logger.info("ipfs hash for " + DOC_NAME + " is " + ipfsDoc.Url());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -123,4 +125,5 @@ public class ShipmentServiceTest {
     private String createShipment(String name, Collaborator owner, Collaborator shipper, Collaborator consignee) {
         return shipmentService.createShipment(credentialsService.getCredentials(owner.Address(), ""), name, owner, shipper, consignee);
     }
+    */
 }

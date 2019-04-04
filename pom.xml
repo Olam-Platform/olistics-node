@@ -5,7 +5,7 @@
 
     <groupId>com.olam</groupId>
     <artifactId>node</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>Olistics_v_0.1</version>
     <packaging>jar</packaging>
 
     <name>node</name>
@@ -98,10 +98,11 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/commons-net/commons-net -->
         <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
-            <version>3.5</version>
+            <version>3.3</version>
         </dependency>
     </dependencies>
 

@@ -9,20 +9,33 @@ import org.springframework.context.annotation.Configuration;
 import java.math.BigInteger;
 import java.net.ConnectException;
 
+@SuppressWarnings("ALL")
 @Configuration
 public class EthereumNodeConfig {
-    @Value("${rpcurl.ethereum.ganache}")
-    private String rpcUrl;
+    // Infura websocket params
 
-    private final BigInteger GANACHE_GAS_PRICE = BigInteger.valueOf(20000000000l);
-    private final BigInteger GANACHE_GAS_LIMIT = BigInteger.valueOf(6721975);
+    /*
+    @Value("${rpcurl.infura.rinkeby.http}")
+    private String  rpcUrl;
+    @Value("${rinkeby.gasprice}")
+    private long    gasPrice;
+    @Value("${rinkeby.gaslimit}")
+    private long    gasLimit;
+    */
+
+    @Value("${rpcurl.ganache.http}")
+    private String  rpcUrl;
+    @Value("${ganache.gasprice}")
+    private long    gasPrice;
+    @Value("${ganache.gaslimit}")
+    private long    gasLimit;
 
     @Bean
     public IEthereumNodeService getEthereumNodeService() {
         IEthereumNodeService nodeService = null;
 
         try {
-            nodeService = new EthereumNodeService(rpcUrl, GANACHE_GAS_PRICE, GANACHE_GAS_LIMIT);
+            nodeService = new EthereumNodeService(rpcUrl, BigInteger.valueOf(gasPrice), BigInteger.valueOf(gasLimit));
         } catch (ConnectException e) {
             e.printStackTrace();
         }

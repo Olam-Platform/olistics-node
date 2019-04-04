@@ -2,6 +2,7 @@ package com.olam.node.service.infrastructure.blockchain;
 
 import com.olam.node.service.application.entities.Collaborator;
 import org.web3j.crypto.Credentials;
+import org.web3j.tuples.generated.Tuple2;
 import org.web3j.tuples.generated.Tuple4;
 import rx.Subscription;
 
@@ -17,7 +18,7 @@ public interface IEthereumNodeService {
 
     BigInteger getNonce(String fromAddress) throws ExecutionException, InterruptedException;
 
-    ShipmentContract deployShipmentContract(Credentials credentials, String shipmentName, Collaborator owner, Collaborator shipper, Collaborator consignee) throws Exception;
+    Tuple2<ShipmentContract, BigInteger> deployShipmentContract(Credentials credentials, String shipmentName, Collaborator owner, Collaborator shipper, Collaborator consignee) throws Exception;
 
     ShipmentContract loadShipmentContract(Credentials credentials, String contractAddress);
 
@@ -37,9 +38,7 @@ public interface IEthereumNodeService {
 
     void notifyTransport(Credentials senderCredentials, String toAddress, String shipmentContractAddress) throws ExecutionException, InterruptedException;
 
-    Subscription registerForTransportCreatedEvent(ITransportObserver transportObserver);
-
-    Subscription registerForTransportEvents(ITransportObserver transportObserver);
+    Subscription registerForShipmentEvents(String shipmentContractAddress, BigInteger inceptionBlockNumber);
 
     Tuple4<String, BigInteger, String, BigInteger> sendRequestDocCall(
             String fromAddress, String contractAddress, String docName
@@ -49,14 +48,7 @@ public interface IEthereumNodeService {
             String fromAddress, String contractAddress, String docName, int docVersion
     ) throws IOException;
 
-    void waitForEvent(ITransportObserver transportObserveralu) throws InterruptedException;
+    void waitForEvent(IShipmentObserver transportObserveralu) throws InterruptedException;
 
-    //void registerForShipmentEvent(String shipmentId, String address) throws IOException;
-
-    //void registerForDocumentEvent(Observer observer);
-
-    //boolean checkWritePermission(String signature, String shipmentId);
-
-    //boolean checkWritePermission(Sign.SignatureData signature, String shipmentId);
 }
 

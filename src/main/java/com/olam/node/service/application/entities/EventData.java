@@ -1,7 +1,6 @@
 package com.olam.node.service.application.entities;
 
 public class EventData {
-
     private String shipmentId;
     private String address;
     private EventType event;
